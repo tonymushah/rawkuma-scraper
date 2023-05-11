@@ -5,7 +5,7 @@ use serde::Serialize;
 
 use crate::{handle_other_error, handle_selector_error};
 
-use super::RawKumaResult;
+use super::{FromElementRef, RawKumaResult};
 
 #[derive(Builder, Clone, Serialize)]
 pub struct BsxTitleData {
@@ -15,8 +15,8 @@ pub struct BsxTitleData {
     pub rating: f64,
 }
 
-impl BsxTitleData {
-    pub fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self> {
+impl FromElementRef<'_> for BsxTitleData {
+    fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self> {
         let title = match data
             .select(&handle_selector_error!(Selector::parse(r#"a"#)))
             .next()
@@ -108,19 +108,6 @@ impl BsxTitleData {
                 )
                 .as_str()
             )))
-            .build()
-        ))
-    }
-    pub fn from_vec_element(elements : Vec<ElementRef<'_>>) -> RawKumaResult<Vec<BsxTitleData>> {
-        let mut datas : Vec<BsxTitleData> = Vec::new();
-        for element in elements {
-            match Self::from_element_ref(element) {
-                RawKumaResult::Ok(d) => {
-                    datas.push(d);
-                },
-                _ => {}
-            }
-        }
-        RawKumaResult::Ok(datas)
+            .build()))
     }
 }
