@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use derive_builder::Builder;
 use reqwest::{Client, Response, Url};
 use scraper::Html;
@@ -18,12 +19,28 @@ pub struct RawKumaClient {
     api_url: Url,
 }
 
+#[async_trait]
+pub trait RawKumaClientFromUrl {
+    async fn manga_details(&mut self, url : Url) -> RawKumaResult<RawKumaMangaDetailData>;
+}
+
 impl Default for RawKumaClient {
     fn default() -> Self {
         Self {
             http_client: Client::new(),
             api_url: Url::parse(BASE_URL).expect("Error on parsing the BASE_URL"),
         }
+    }
+}
+
+#[async_trait]
+impl RawKumaClientFromUrl for RawKumaClient {
+    async fn manga_details(&mut self, url : Url) -> RawKumaResult<RawKumaMangaDetailData> {
+        type Output = RawKumaMangaDetailData;
+        let res = handle_rawkuma_result!(self.send_get(url).await);
+        let html = Html::parse_document(handle_reqwest_error!(res.text().await).as_str());
+        let parser = handle_rawkuma_result!(RawKumaMangaDetailParser::init(&html));
+        RawKumaResult::Ok(handle_rawkuma_result!(<Output as FromHtmlParser<RawKumaMangaDetailParser>>::from(parser)))
     }
 }
 
@@ -54,4 +71,5 @@ impl RawKumaClient {
         let parser = handle_rawkuma_result!(RawKumaMangaDetailParser::init(&html));
         RawKumaResult::Ok(handle_rawkuma_result!(<Output as FromHtmlParser<RawKumaMangaDetailParser>>::from(parser)))
     }
+    
 }

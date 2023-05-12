@@ -5,6 +5,7 @@ use crate::{types::RawKumaResult, handle_selector_error, handle_rawkuma_result};
 pub mod home;
 pub mod manga;
 pub mod manga_details;
+pub mod chapter;
 
 pub trait HtmlParser<'a> {
     fn init(html: &'a Html) -> RawKumaResult<Self> where Self: Sized;

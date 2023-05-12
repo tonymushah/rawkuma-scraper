@@ -1,11 +1,11 @@
 use derive_builder::Builder;
-use reqwest::Url;
+use reqwest::{Url, Client, Response};
 use scraper::{ElementRef, Selector};
 use serde::Serialize;
 
-use crate::{handle_other_error, handle_selector_error};
+use crate::{handle_other_error, handle_selector_error, RawKumaClient, client::RawKumaClientFromUrl, handle_reqwest_error};
 
-use super::{FromElementRef, RawKumaResult};
+use super::{FromElementRef, RawKumaResult, manga::RawKumaMangaDetailData};
 
 #[derive(Builder, Clone, Serialize)]
 pub struct BsxTitleData {
@@ -20,6 +20,13 @@ impl BsxTitleData {
         RawKumaResult::Ok(handle_selector_error!(Selector::parse(
             r#"div[class="bsx"]"#
         )))
+    }
+    pub async fn get_url_manga_detail(&self, client : &mut RawKumaClient) -> RawKumaResult<RawKumaMangaDetailData>{
+        RawKumaClientFromUrl::manga_details(client, self.url.clone()).await
+    }
+    pub async fn get_image_response(&self, client : Client) -> RawKumaResult<Response>{
+        let req = handle_reqwest_error!(client.get(self.image.clone()).build());
+        RawKumaResult::Ok(handle_reqwest_error!(client.execute(req).await))
     }
 }
 
