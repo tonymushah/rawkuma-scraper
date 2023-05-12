@@ -15,6 +15,14 @@ pub struct BsxTitleData {
     pub rating: f64,
 }
 
+impl BsxTitleData {
+    pub fn div_bsx_selector() -> RawKumaResult<Selector> {
+        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
+            r#"div[class="bsx"]"#
+        )))
+    }
+}
+
 impl FromElementRef<'_> for BsxTitleData {
     fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self> {
         let title = match data

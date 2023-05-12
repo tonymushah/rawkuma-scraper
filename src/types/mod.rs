@@ -1,5 +1,6 @@
 mod bixbox;
 mod bsx;
+mod chapterlist;
 mod error;
 mod genre_tag;
 pub mod home;
@@ -8,6 +9,10 @@ mod utao;
 
 pub use bixbox::{BixboxData, BixboxDataBuilder, BixboxDataBuilderError};
 pub use bsx::{BsxTitleData, BsxTitleDataBuilder, BsxTitleDataBuilderError};
+pub use chapterlist::{
+    Chapter, ChapterBuilder, ChapterBuilderError, ChapterList, ChapterListBuilder,
+    ChapterListBuilderError,
+};
 pub use error::RawKumaResult;
 pub use genre_tag::{MgenTag, MgenTagBuilder, MgenTagBuilderError};
 use scraper::ElementRef;
@@ -39,9 +44,11 @@ pub trait FromElementRef<'a> {
     }
 }
 
-pub trait FromHtmlParser<'a, T> 
-    where 
-        T : HtmlParser<'a>
+pub trait FromHtmlParser<'a, T>
+where
+    T: HtmlParser<'a>,
 {
-    fn from(parser : T) -> RawKumaResult<Self> where Self: Sized;
+    fn from(parser: T) -> RawKumaResult<Self>
+    where
+        Self: Sized;
 }

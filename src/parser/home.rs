@@ -47,12 +47,6 @@ impl<'a> RawKumaHomeParser<'a> {
         return RawKumaResult::Ok(divs);
     }
 
-    pub fn div_bsx_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"div[class="bsx"]"#
-        )))
-    }
-
     pub fn div_bixbox_hothome_selector() -> RawKumaResult<Selector> {
         RawKumaResult::Ok(handle_selector_error!(Selector::parse(
             r#"div[class="bixbox hothome"]"#
@@ -75,7 +69,7 @@ impl<'a> RawKumaHomeParser<'a> {
     pub fn find_popular_today_elements(html: &'a Html) -> RawKumaResult<Vec<ElementRef<'a>>> {
         let div = handle_rawkuma_result!(Self::get_div_bixbox_hothome(&html));
         let bsx_elements: Vec<ElementRef> = div
-            .select(&handle_rawkuma_result!(Self::div_bsx_selector()))
+            .select(&handle_rawkuma_result!(BsxTitleData::div_bsx_selector()))
             .collect();
         RawKumaResult::Ok(bsx_elements)
     }
@@ -108,7 +102,7 @@ impl<'a> RawKumaHomeParser<'a> {
             data.insert(
                 key,
                 elememt
-                    .select(&handle_rawkuma_result!(Self::div_bsx_selector()))
+                    .select(&handle_rawkuma_result!(BsxTitleData::div_bsx_selector()))
                     .collect(),
             );
         }
