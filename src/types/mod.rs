@@ -1,12 +1,18 @@
 mod bixbox;
 mod bsx;
+pub mod chapter;
 mod chapterlist;
 mod error;
 mod genre_tag;
 pub mod home;
 pub mod manga;
+mod reader_area;
 mod utao;
 
+pub use reader_area::{
+    ReaderArea, ReaderAreaBuilder, ReaderAreaBuilderError, ReaderAreaImage, ReaderAreaImageBuilder,
+    ReaderAreaImageBuilderError,
+};
 pub use bixbox::{BixboxData, BixboxDataBuilder, BixboxDataBuilderError};
 pub use bsx::{BsxTitleData, BsxTitleDataBuilder, BsxTitleDataBuilderError};
 pub use chapterlist::{
