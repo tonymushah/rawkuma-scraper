@@ -1,17 +1,36 @@
 use std::collections::HashMap;
 
+use derive_builder::Builder;
 use scraper::{ElementRef, Html, Selector};
 
 use crate::{
     handle_rawkuma_result, handle_selector_error,
-    types::{BsxTitleData, RawKumaResult, UtaoTitleData},
+    types::{BsxTitleData, RawKumaResult, UtaoTitleData, FromElementRef},
 };
 
-#[derive(Clone)]
+use super::HtmlParser;
+
+#[derive(Clone, Builder)]
 pub struct RawKumaHomeParser<'a> {
+    #[builder(setter(skip = true))]
     popular_today: Vec<ElementRef<'a>>,
+    #[builder(setter(skip = true))]
     recommandation: HashMap<String, Vec<ElementRef<'a>>>,
+    #[builder(setter(skip = true))]
     utao_elements: Vec<ElementRef<'a>>,
+}
+
+impl<'a> HtmlParser<'a> for RawKumaHomeParser<'a> {
+    fn init(html: &'a Html) -> RawKumaResult<Self> {
+        let popular_today = handle_rawkuma_result!(Self::find_popular_today_elements(&html));
+        let recommandation = handle_rawkuma_result!(Self::find_recomendation_elements(&html));
+        let utaos = handle_rawkuma_result!(Self::get_utao_divs(&html));
+        RawKumaResult::Ok(Self {
+            popular_today: popular_today,
+            recommandation: recommandation,
+            utao_elements: utaos,
+        })
+    }
 }
 
 impl<'a> RawKumaHomeParser<'a> {
@@ -26,12 +45,6 @@ impl<'a> RawKumaHomeParser<'a> {
             .select(&handle_rawkuma_result!(Self::div_listupd_selector()))
             .collect();
         return RawKumaResult::Ok(divs);
-    }
-
-    pub fn div_bsx_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"div[class="bsx"]"#
-        )))
     }
 
     pub fn div_bixbox_hothome_selector() -> RawKumaResult<Selector> {
@@ -56,7 +69,7 @@ impl<'a> RawKumaHomeParser<'a> {
     pub fn find_popular_today_elements(html: &'a Html) -> RawKumaResult<Vec<ElementRef<'a>>> {
         let div = handle_rawkuma_result!(Self::get_div_bixbox_hothome(&html));
         let bsx_elements: Vec<ElementRef> = div
-            .select(&handle_rawkuma_result!(Self::div_bsx_selector()))
+            .select(&handle_rawkuma_result!(BsxTitleData::div_bsx_selector()))
             .collect();
         RawKumaResult::Ok(bsx_elements)
     }
@@ -89,22 +102,11 @@ impl<'a> RawKumaHomeParser<'a> {
             data.insert(
                 key,
                 elememt
-                    .select(&handle_rawkuma_result!(Self::div_bsx_selector()))
+                    .select(&handle_rawkuma_result!(BsxTitleData::div_bsx_selector()))
                     .collect(),
             );
         }
         RawKumaResult::Ok(data)
-    }
-
-    pub fn init(html: &'a Html) -> RawKumaResult<Self> {
-        let popular_today = handle_rawkuma_result!(Self::find_popular_today_elements(&html));
-        let recommandation = handle_rawkuma_result!(Self::find_recomendation_elements(&html));
-        let utaos = handle_rawkuma_result!(Self::get_utao_divs(&html));
-        RawKumaResult::Ok(Self {
-            popular_today: popular_today,
-            recommandation: recommandation,
-            utao_elements: utaos,
-        })
     }
 
     pub fn div_nav_tabs_selector() -> RawKumaResult<Selector> {
@@ -204,8 +206,8 @@ impl<'a> RawKumaHomeParser<'a> {
         let mut result: Vec<BsxTitleData> = Vec::new();
         for element in &self.popular_today {
             /*
-            
-             
+
+
             match BsxTitleData::from_element_ref(*element) {
                 RawKumaResult::Ok(d) => {
                     result.push(d);

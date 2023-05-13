@@ -5,7 +5,7 @@ use serde::Serialize;
 
 use crate::{handle_other_error, handle_rawkuma_result, handle_selector_error};
 
-use super::RawKumaResult;
+use super::{RawKumaResult, FromElementRef};
 
 #[derive(Builder, Clone, Serialize)]
 pub struct UtaoTitleChapter {
@@ -13,8 +13,8 @@ pub struct UtaoTitleChapter {
     pub text: String,
 }
 
-impl UtaoTitleChapter {
-    pub fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self> {
+impl FromElementRef<'_> for UtaoTitleChapter {
+    fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self> {
         let title = match data
             .select(&handle_selector_error!(Selector::parse(r#"a"#)))
             .next()
@@ -50,23 +50,6 @@ impl UtaoTitleChapter {
             })
             .build()))
     }
-
-    pub fn from_element_ref_vecs(data: Vec<ElementRef<'_>>) -> RawKumaResult<Vec<Self>> {
-        let mut result: Vec<UtaoTitleChapter> = Vec::new();
-        for element in data {
-            result.push(Self::from_element_ref(element).unwrap());
-            /*
-                match Self::from_element_ref(element) {
-                RawKumaResult::Ok(d) => {
-                    result.push(d);
-                }
-                _ => {}
-            }
-            */
-            
-        }
-        RawKumaResult::Ok(result)
-    }
 }
 
 #[derive(Builder, Clone, Serialize)]
@@ -100,7 +83,10 @@ impl<'a> UtaoTitleData {
         return RawKumaResult::Ok(divs);
     }
 
-    pub fn from_element_ref(data: ElementRef<'a>) -> RawKumaResult<Self> {
+}
+
+impl FromElementRef<'_> for UtaoTitleData {
+    fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self> {
         let imgu = handle_rawkuma_result!(Self::get_imgu_div(data));
         let image = match imgu
             .select(&handle_selector_error!(Selector::parse("img")))
@@ -146,7 +132,7 @@ impl<'a> UtaoTitleData {
         };
         RawKumaResult::Ok(handle_other_error!(UtaoTitleDataBuilder::default()
             .chapters(handle_rawkuma_result!(
-                UtaoTitleChapter::from_element_ref_vecs(chapters)
+                UtaoTitleChapter::from_vec_element(chapters)
             ))
             .image(handle_other_error!(Url::parse(
                 format!(
@@ -192,4 +178,5 @@ impl<'a> UtaoTitleData {
             )
             .build()))
     }
+
 }

@@ -18,6 +18,14 @@ impl<T> RawKumaResult<T> {
             RawKumaResult::Io(err) => unwrap_failed("called `RawKumaResult::unwrap()` on an `Io` value", &err)
         }
     }
+    pub fn to_std_result(self) -> Result<T, String> {
+        match self {
+            RawKumaResult::Ok(d) => Ok(d),
+            RawKumaResult::ReqwestError(err) => Err(err.to_string()),
+            RawKumaResult::Other(err) => Err(err.to_string()),
+            RawKumaResult::Io(err) => Err(err.to_string())
+        }
+    }
 }
 
 #[macro_export]

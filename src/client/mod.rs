@@ -1,46 +1,75 @@
+use async_trait::async_trait;
 use derive_builder::Builder;
-use reqwest::{Client, Url, Response};
-use scraper::{Html};
+use reqwest::{Client, Response, Url};
+use scraper::Html;
 
-use crate::{constant::BASE_URL, types::{home::{RawKumaHomeData, RawKumaHomeDataBuilder}, RawKumaResult}, handle_reqwest_error, handle_rawkuma_result, parser::home::RawKumaHomeParser, handle_other_error};
+use crate::{
+    constant::BASE_URL,
+    handle_other_error, handle_rawkuma_result, handle_reqwest_error,
+    parser::{home::RawKumaHomeParser, HtmlParser, manga_details::RawKumaMangaDetailParser},
+    types::{
+        home::{RawKumaHomeData},
+        RawKumaResult, FromHtmlParser, manga::RawKumaMangaDetailData,
+    },
+};
 
 #[derive(Clone, Builder)]
-pub struct RawKumaClient{
-    http_client : Client,
-    api_url : Url
+pub struct RawKumaClient {
+    http_client: Client,
+    api_url: Url,
+}
+
+#[async_trait]
+pub trait RawKumaClientFromUrl {
+    async fn manga_details(&mut self, url : Url) -> RawKumaResult<RawKumaMangaDetailData>;
 }
 
 impl Default for RawKumaClient {
     fn default() -> Self {
-        Self { http_client: Client::new(), api_url: Url::parse(BASE_URL).expect("Error on parsing the BASE_URL") }
+        Self {
+            http_client: Client::new(),
+            api_url: Url::parse(BASE_URL).expect("Error on parsing the BASE_URL"),
+        }
+    }
+}
+
+#[async_trait]
+impl RawKumaClientFromUrl for RawKumaClient {
+    async fn manga_details(&mut self, url : Url) -> RawKumaResult<RawKumaMangaDetailData> {
+        type Output = RawKumaMangaDetailData;
+        let res = handle_rawkuma_result!(self.send_get(url).await);
+        let html = Html::parse_document(handle_reqwest_error!(res.text().await).as_str());
+        let parser = handle_rawkuma_result!(RawKumaMangaDetailParser::init(&html));
+        RawKumaResult::Ok(handle_rawkuma_result!(<Output as FromHtmlParser<RawKumaMangaDetailParser>>::from(parser)))
     }
 }
 
 impl RawKumaClient {
-    pub fn new(client : Client) -> Self {
-        Self { http_client: client, api_url: Url::parse(BASE_URL).expect("Error on parsing the BASE_URL") }
+    pub fn new(client: Client) -> Self {
+        Self {
+            http_client: client,
+            api_url: Url::parse(BASE_URL).expect("Error on parsing the BASE_URL"),
+        }
     }
-    async fn send(&mut self, url : Url) -> RawKumaResult<Response>{
+    async fn send_get(&mut self, url: Url) -> RawKumaResult<Response> {
         let req = handle_reqwest_error!(self.http_client.get(url).build());
         let res = handle_reqwest_error!(self.http_client.execute(req).await);
         return RawKumaResult::Ok(res);
     }
-    pub async fn home(&mut self) -> RawKumaResult<RawKumaHomeData>{
-        let res = handle_rawkuma_result!(self.send(self.api_url.clone()).await);
+    pub async fn home(&mut self) -> RawKumaResult<RawKumaHomeData> {
+        type Output = RawKumaHomeData;
+        let res = handle_rawkuma_result!(self.send_get(self.api_url.clone()).await);
         let html = Html::parse_document(handle_reqwest_error!(res.text().await).as_str());
-        let parser_result = RawKumaHomeParser::init(&html);
-        let home = match parser_result {
-            RawKumaResult::Ok(d) => d,
-            RawKumaResult::ReqwestError(err) => return RawKumaResult::ReqwestError(err),
-            RawKumaResult::Other(err) => return RawKumaResult::Other(err),
-            RawKumaResult::Io(err) => return RawKumaResult::Io(err)
-        };
-        let data = handle_other_error!(RawKumaHomeDataBuilder::default()
-            .popular_title(home.get_popular_today())
-            .recommandation(home.get_recommandation())
-            .latest_update(home.get_latest())
-            .build()
-        );
-        RawKumaResult::Ok(data)
+        let home = handle_rawkuma_result!(RawKumaHomeParser::init(&html));
+        RawKumaResult::Ok(handle_rawkuma_result!(<Output as FromHtmlParser<RawKumaHomeParser>>::from(home)))
     }
+    pub async fn manga_details(&mut self, manga_slug : &dyn ToString) -> RawKumaResult<RawKumaMangaDetailData> {
+        type Output = RawKumaMangaDetailData;
+        let url = handle_other_error!(Url::parse(format!("{}{}", self.api_url, manga_slug.to_string()).as_str()));
+        let res = handle_rawkuma_result!(self.send_get(url).await);
+        let html = Html::parse_document(handle_reqwest_error!(res.text().await).as_str());
+        let parser = handle_rawkuma_result!(RawKumaMangaDetailParser::init(&html));
+        RawKumaResult::Ok(handle_rawkuma_result!(<Output as FromHtmlParser<RawKumaMangaDetailParser>>::from(parser)))
+    }
+    
 }
