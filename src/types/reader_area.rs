@@ -7,7 +7,7 @@ use crate::{handle_other_error, handle_rawkuma_result, handle_selector_error};
 
 use super::{FromElementRef, RawKumaResult};
 
-#[derive(Builder, Clone, Serialize)]
+#[derive(Builder, Clone, Serialize, Default)]
 pub struct ReaderArea {
     pub images: Vec<ReaderAreaImage>,
 }
@@ -33,6 +33,7 @@ impl<'a> FromElementRef<'a> for ReaderArea {
     where
         Self: Sized,
     {
+        todo!();
         let images_elements =
             handle_rawkuma_result!(ReaderAreaImage::get_reader_area_images_element(&data));
         let images: Vec<ReaderAreaImage> =
@@ -52,7 +53,7 @@ pub struct ReaderAreaImage {
 
 impl<'a> ReaderAreaImage {
     pub fn get_reader_area_image_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse("img.ts-main-image")))
+        RawKumaResult::Ok(handle_selector_error!(Selector::parse("img")))
     }
     pub fn get_reader_area_images_element(
         data: &'a ElementRef<'a>,

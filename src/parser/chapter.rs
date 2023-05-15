@@ -21,6 +21,7 @@ impl<'a> HtmlParser<'a> for RawKumaChapterParser<'a> {
 
 impl<'a> RawKumaChapterParser<'a> {
     pub fn get_reader_area_data(&self) -> RawKumaResult<ReaderArea> {
-        todo!()
+        let reader_area = handle_rawkuma_result!(ReaderArea::get_reader_area_element(&(self.content)));
+        RawKumaResult::Ok(handle_rawkuma_result!(ReaderArea::from_element_ref(reader_area)))
     }
 }
