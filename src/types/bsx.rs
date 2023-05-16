@@ -3,7 +3,7 @@ use reqwest::{Url, Client, Response};
 use scraper::{ElementRef, Selector};
 use serde::Serialize;
 
-use crate::{handle_other_error, handle_selector_error, RawKumaClient, client::RawKumaClientFromUrl, handle_reqwest_error};
+use crate::{handle_other_error, handle_selector_error, RawKumaClient, client::RawKumaClientFromUrl, handle_reqwest_error, handle_rawkuma_result};
 
 use super::{FromElementRef, RawKumaResult, manga::RawKumaMangaDetailData};
 
@@ -27,6 +27,10 @@ impl BsxTitleData {
     pub async fn get_image_response(&self, client : Client) -> RawKumaResult<Response>{
         let req = handle_reqwest_error!(client.get(self.image.clone()).build());
         RawKumaResult::Ok(handle_reqwest_error!(client.execute(req).await))
+    }
+    pub fn get_bsx_elements<'a>(data : &'a ElementRef<'a>) -> RawKumaResult<Vec<ElementRef<'a>>> {
+        let selector = handle_rawkuma_result!(Self::div_bsx_selector());
+        RawKumaResult::Ok(data.select(&selector).collect())
     }
 }
 
