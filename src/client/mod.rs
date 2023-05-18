@@ -6,10 +6,13 @@ use scraper::Html;
 use crate::{
     constant::BASE_URL,
     handle_other_error, handle_rawkuma_result, handle_reqwest_error,
-    parser::{home::RawKumaHomeParser, HtmlParser, manga_details::RawKumaMangaDetailParser, chapter::RawKumaChapterParser},
+    parser::{
+        chapter::RawKumaChapterParser, home::RawKumaHomeParser,
+        manga_details::RawKumaMangaDetailParser, HtmlParser, search::RawKumaSearchParser,
+    },
     types::{
-        home::RawKumaHomeData,
-        RawKumaResult, FromHtmlParser, manga::RawKumaMangaDetailData, chapter::RawKumaChapterData,
+        chapter::RawKumaChapterData, home::RawKumaHomeData, manga::RawKumaMangaDetailData,
+        search::RawKumaSearch, FromHtmlParser, RawKumaResult,
     },
 };
 
@@ -21,9 +24,10 @@ pub struct RawKumaClient {
 
 #[async_trait]
 pub trait RawKumaClientFromUrl {
-    async fn manga_details(&mut self, url : Url) -> RawKumaResult<RawKumaMangaDetailData>;
-    async fn chapter(&mut self, url : Url) -> RawKumaResult<RawKumaChapterData>;
-    async fn home(&mut self, url : Url) -> RawKumaResult<RawKumaHomeData>;
+    async fn manga_details(&mut self, url: Url) -> RawKumaResult<RawKumaMangaDetailData>;
+    async fn chapter(&mut self, url: Url) -> RawKumaResult<RawKumaChapterData>;
+    async fn home(&mut self, url: Url) -> RawKumaResult<RawKumaHomeData>;
+    async fn search(&mut self, url: Url) -> RawKumaResult<RawKumaSearch>;
 }
 
 impl Default for RawKumaClient {
@@ -37,26 +41,41 @@ impl Default for RawKumaClient {
 
 #[async_trait]
 impl RawKumaClientFromUrl for RawKumaClient {
-    async fn manga_details(&mut self, url : Url) -> RawKumaResult<RawKumaMangaDetailData> {
+    async fn manga_details(&mut self, url: Url) -> RawKumaResult<RawKumaMangaDetailData> {
         type Output = RawKumaMangaDetailData;
         let res = handle_rawkuma_result!(self.send_get(url).await);
         let html = Html::parse_document(handle_reqwest_error!(res.text().await).as_str());
         let parser = handle_rawkuma_result!(RawKumaMangaDetailParser::init(&html));
-        RawKumaResult::Ok(handle_rawkuma_result!(<Output as FromHtmlParser<RawKumaMangaDetailParser>>::from(parser)))
+        RawKumaResult::Ok(handle_rawkuma_result!(<Output as FromHtmlParser<
+            RawKumaMangaDetailParser,
+        >>::from(parser)))
     }
-    async fn chapter(&mut self, url : Url) -> RawKumaResult<RawKumaChapterData> {
+    async fn chapter(&mut self, url: Url) -> RawKumaResult<RawKumaChapterData> {
         type Output = RawKumaChapterData;
         let res = handle_rawkuma_result!(self.send_get(url).await);
         let html = Html::parse_document(handle_reqwest_error!(res.text().await).as_str());
         let parser = handle_rawkuma_result!(RawKumaChapterParser::init(&html));
-        RawKumaResult::Ok(handle_rawkuma_result!(<Output as FromHtmlParser<RawKumaChapterParser>>::from(parser)))
+        RawKumaResult::Ok(handle_rawkuma_result!(<Output as FromHtmlParser<
+            RawKumaChapterParser,
+        >>::from(parser)))
     }
-    async fn home(&mut self, url : Url) -> RawKumaResult<RawKumaHomeData>{
+    async fn home(&mut self, url: Url) -> RawKumaResult<RawKumaHomeData> {
         type Output = RawKumaHomeData;
         let res = handle_rawkuma_result!(self.send_get(url).await);
         let html = Html::parse_document(handle_reqwest_error!(res.text().await).as_str());
         let home = handle_rawkuma_result!(RawKumaHomeParser::init(&html));
-        RawKumaResult::Ok(handle_rawkuma_result!(<Output as FromHtmlParser<RawKumaHomeParser>>::from(home)))
+        RawKumaResult::Ok(handle_rawkuma_result!(<Output as FromHtmlParser<
+            RawKumaHomeParser,
+        >>::from(home)))
+    }
+    async fn search(&mut self, url: Url) -> RawKumaResult<RawKumaSearch> {
+        type Output = RawKumaSearch;
+        let res = handle_rawkuma_result!(self.send_get(url).await);
+        let html = Html::parse_document(handle_reqwest_error!(res.text().await).as_str());
+        let home = handle_rawkuma_result!(RawKumaSearchParser::init(&html));
+        RawKumaResult::Ok(handle_rawkuma_result!(<Output as FromHtmlParser<
+            RawKumaSearchParser,
+        >>::from(home)))
     }
 }
 
@@ -76,12 +95,26 @@ impl RawKumaClient {
         let url = self.api_url.clone();
         RawKumaClientFromUrl::home(self, url).await
     }
-    pub async fn manga_details(&mut self, manga_slug : &dyn ToString) -> RawKumaResult<RawKumaMangaDetailData> {
-        let url = handle_other_error!(Url::parse(format!("{}{}", self.api_url, manga_slug.to_string()).as_str()));
+    pub async fn manga_details(
+        &mut self,
+        manga_slug: &dyn ToString,
+    ) -> RawKumaResult<RawKumaMangaDetailData> {
+        let url = handle_other_error!(Url::parse(
+            format!("{}{}", self.api_url, manga_slug.to_string()).as_str()
+        ));
         RawKumaClientFromUrl::manga_details(self, url).await
     }
-    pub async fn chapter(&mut self, chapter_slug : &dyn ToString) -> RawKumaResult<RawKumaChapterData> {
-        let url = handle_other_error!(Url::parse(format!("{}{}", self.api_url, chapter_slug.to_string()).as_str()));
+    pub async fn chapter(
+        &mut self,
+        chapter_slug: &dyn ToString,
+    ) -> RawKumaResult<RawKumaChapterData> {
+        let url = handle_other_error!(Url::parse(
+            format!("{}{}", self.api_url, chapter_slug.to_string()).as_str()
+        ));
         RawKumaClientFromUrl::chapter(self, url).await
+    }
+    pub async fn search(&mut self, search_query : &dyn ToString) -> RawKumaResult<RawKumaSearch> {
+        let url = handle_other_error!(Url::parse_with_params(self.api_url.to_string().as_str(), [("s", search_query.to_string().as_str())]));
+        RawKumaClientFromUrl::search(self, url).await
     }
 }
