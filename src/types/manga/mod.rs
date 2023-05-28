@@ -1,8 +1,8 @@
 use derive_builder::Builder;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 use crate::{
-    handle_other_error, handle_rawkuma_result, parser::manga_details::RawKumaMangaDetailParser,
+    handle_other_error, handle_rawkuma_result, parser::manga_details::RawKumaMangaDetailParser, enums::manga::{Status, Genre, Order, Type},
 };
 
 use super::{BixboxData, FromHtmlParser, RawKumaResult, chapterlist::ChapterList, BsxTitleData};
@@ -28,6 +28,17 @@ impl<'a> FromHtmlParser<'a, RawKumaMangaDetailParser<'a>> for RawKumaMangaDetail
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct MangaListParameter{
-    
+    page : u64,
+    status : Status,
+    genre : Vec<Genre>,
+    order : Order,
+    type_ : Type
+}
+
+impl<'a> Default for MangaListParameter {
+    fn default() -> Self {
+        Self { page: 1, status: Default::default(), genre: Default::default(), order: Default::default(), type_: Default::default() }
+    }
 }
