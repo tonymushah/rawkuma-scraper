@@ -27,3 +27,7 @@ impl<'a> FromHtmlParser<'a, RawKumaMangaDetailParser<'a>> for RawKumaMangaDetail
         .build()))
     }
 }
+
+pub struct MangaListParameter{
+    
+}

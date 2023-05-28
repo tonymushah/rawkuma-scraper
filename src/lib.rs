@@ -3,3 +3,4 @@ pub mod constant;
 mod client;
 pub mod parser;
 pub use client::RawKumaClient;
+pub mod enums;
