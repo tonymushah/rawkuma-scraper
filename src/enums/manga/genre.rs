@@ -1,11 +1,15 @@
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[derive(Clone)]
 pub enum Genre {
     All,
     Action,
     Adult,
     Adventure,
+    #[cfg_attr(feature = "serde", serde(rename = "Alternative_World"))]
     AlternativeWorld,
     Comedy,
     Drama,
@@ -15,6 +19,7 @@ pub enum Genre {
     Fantasy,
     Food,
     Game,
+    #[cfg_attr(feature = "serde", serde(rename = "Gender_Bender"))]
     GenderBender,
     Harem,
     Historical,
@@ -23,23 +28,30 @@ pub enum Genre {
     Josei,
     Lolicon,
     Magic,
+    #[cfg_attr(feature = "serde", serde(rename = "Martial_Arts"))]
     MartialArts,
     Mature,
     Mecha,
     Medical,
     Mystery,
+    #[cfg_attr(feature = "serde", serde(rename = "N_A"))]
     NA,
     Oneshot,
     Psychological,
     Romance,
+    #[cfg_attr(feature = "serde", serde(rename = "School_Life"))]
     SchoolLife,
+    #[cfg_attr(feature = "serde", serde(rename = "Sci_Fi"))]
     SciFi,
     Seinen,
     Shotacon,
     Shoujo,
+    #[cfg_attr(feature = "serde", serde(rename = "Shoujo_Ai"))]
     ShoujoAi,
     Shounen,
+    #[cfg_attr(feature = "serde", serde(rename = "Shounen_Ai"))]
     ShounenAi,
+    #[cfg_attr(feature = "serde", serde(rename = "Slice_Of_Life"))]
     SliceOfLife,
     Smut,
     Sports,

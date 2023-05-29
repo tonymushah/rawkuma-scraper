@@ -2,13 +2,20 @@ use derive_builder::Builder;
 use htmlize::unescape;
 use reqwest::Url;
 use scraper::{ElementRef, Selector, Html};
-use serde::Serialize;
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
+#[cfg(feature = "getset")]
+use getset::{Getters};
 
 use crate::{handle_other_error, handle_rawkuma_result, handle_selector_error};
 
 use super::{FromElementRef, RawKumaResult};
 
-#[derive(Builder, Clone, Serialize, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "getset", derive(Getters))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[derive(Builder, Clone, Default)]
 pub struct ReaderArea {
     pub images: Vec<ReaderAreaImage>,
 }
@@ -53,7 +60,8 @@ impl<'a> FromElementRef<'a> for ReaderArea {
     }
 }
 
-#[derive(Builder, Clone, Serialize, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Builder, Clone, Debug)]
 pub struct ReaderAreaImage {
     pub url: Url,
     pub width : f32,

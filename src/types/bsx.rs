@@ -1,13 +1,20 @@
 use derive_builder::Builder;
 use reqwest::{Url, Client, Response};
 use scraper::{ElementRef, Selector};
-use serde::Serialize;
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
+#[cfg(feature = "getset")]
+use getset::{Getters};
 
 use crate::{handle_other_error, handle_selector_error, RawKumaClient, client::RawKumaClientFromUrl, handle_reqwest_error, handle_rawkuma_result};
 
 use super::{FromElementRef, RawKumaResult, manga::RawKumaMangaDetailData};
 
-#[derive(Builder, Clone, Serialize)]
+#[derive(Builder, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "getset", derive(Getters))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct BsxTitleData {
     pub title: String,
     pub url: Url,

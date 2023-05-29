@@ -1,11 +1,18 @@
 use derive_builder::Builder;
-use serde::Serialize;
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
+#[cfg(feature = "getset")]
+use getset::{Getters};
 
 use crate::{handle_other_error, handle_rawkuma_result, parser::search::RawKumaSearchParser};
 
 use super::{BsxTitleData, FromHtmlParser, RawKumaResult};
 
-#[derive(Default, Serialize, Builder)]
+#[derive(Default, Clone, Builder)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "getset", derive(Getters))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct RawKumaSearch {
     pub result: Vec<BsxTitleData>,
 }

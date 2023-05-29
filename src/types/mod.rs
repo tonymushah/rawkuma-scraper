@@ -9,6 +9,7 @@ pub mod manga;
 mod reader_area;
 mod utao;
 pub mod search;
+
 pub use reader_area::{
     ReaderArea, ReaderAreaBuilder, ReaderAreaBuilderError, ReaderAreaImage, ReaderAreaImageBuilder,
     ReaderAreaImageBuilderError,
@@ -59,3 +60,6 @@ where
         Self: Sized;
 }
 
+pub trait ToUrlParam<>{
+    fn to_url_param(&self) -> Vec<(String, String)>;
+}

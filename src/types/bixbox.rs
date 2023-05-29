@@ -1,7 +1,11 @@
 use derive_builder::Builder;
 use reqwest::Url;
 use scraper::{ElementRef, Selector};
-use serde::Serialize;
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
+#[cfg(feature = "getset")]
+use getset::{Getters};
 
 use crate::{constant::BASE_URL, handle_other_error, handle_rawkuma_result, handle_selector_error};
 
@@ -9,7 +13,10 @@ use super::{FromElementRef, MgenTag, RawKumaResult};
 
 use chrono::{DateTime, FixedOffset};
 
-#[derive(Builder, Clone, Serialize)]
+#[derive(Builder, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "getset", derive(Getters))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct BixboxData {
     pub name: String,
     pub image: Url,

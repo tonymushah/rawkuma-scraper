@@ -1,13 +1,20 @@
 use derive_builder::Builder;
 use reqwest::Url;
 use scraper::{ElementRef, Selector};
-use serde::Serialize;
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
+#[cfg(feature = "getset")]
+use getset::{Getters};
 
 use crate::{handle_other_error, handle_rawkuma_result, handle_selector_error};
 
 use super::{RawKumaResult, FromElementRef};
 
-#[derive(Builder, Clone, Serialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "getset", derive(Getters))]
+#[derive(Builder, Clone)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct UtaoTitleChapter {
     pub url: Url,
     pub text: String,
@@ -52,7 +59,9 @@ impl FromElementRef<'_> for UtaoTitleChapter {
     }
 }
 
-#[derive(Builder, Clone, Serialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Builder, Clone)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct UtaoTitleData {
     pub title: String,
     pub url: Url,

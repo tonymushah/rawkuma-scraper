@@ -1,11 +1,18 @@
 use super::{RawKumaResult, BsxTitleData};
 use crate::{handle_other_error, handle_rawkuma_result, parser::chapter::RawKumaChapterParser};
 use derive_builder::Builder;
-use serde::Serialize;
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
+#[cfg(feature = "getset")]
+use getset::{Getters};
 
 use super::{FromHtmlParser, ReaderArea};
 
-#[derive(Clone, Builder, Default, Serialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "getset", derive(Getters))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[derive(Clone, Builder, Default)]
 pub struct RawKumaChapterData {
     pub reader_area: ReaderArea,
     pub related_mangas : Vec<BsxTitleData>
