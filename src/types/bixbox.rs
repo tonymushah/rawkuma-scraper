@@ -19,6 +19,7 @@ use chrono::{DateTime, FixedOffset};
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct BixboxData {
     pub name: String,
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub image: Url,
     pub worst_rating: u16,
     pub best_rating: u16,

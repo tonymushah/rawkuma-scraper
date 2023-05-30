@@ -62,7 +62,9 @@ impl<'a> FromElementRef<'a> for ReaderArea {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Builder, Clone, Debug)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct ReaderAreaImage {
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub url: Url,
     pub width : f32,
     pub height : f32,

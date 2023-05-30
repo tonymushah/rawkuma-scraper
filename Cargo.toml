@@ -22,6 +22,7 @@ getset = { version = "0.1.2", optional = true }
 serde_json = "1.0.96"
 tokio = { version = "1.28.0", features = ["rt", "sync", "rt-multi-thread", "macros"] }
 jsonxf = "1.1.1"
+specta = { version = "1.0.4", features = ["export"]}
 
 [features]
 default = ["specta"]

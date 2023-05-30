@@ -54,11 +54,14 @@ impl<'a> FromElementRef<'a> for ChapterList {
 
 #[derive(Builder, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct Chapter {
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub url: Url,
     pub chapter_num: String,
     pub chapter_date: String,
     pub num: f32,
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub download_link: Url,
 }
 

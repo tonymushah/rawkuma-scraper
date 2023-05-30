@@ -21,7 +21,7 @@ use super::ToUrlParam;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct MangaListParameter{
-    page : u64,
+    page : u32,
     status : Status,
     genre : Vec<Genre>,
     order : Order,

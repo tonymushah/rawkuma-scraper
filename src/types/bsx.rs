@@ -17,7 +17,9 @@ use super::{FromElementRef, RawKumaResult, manga::RawKumaMangaDetailData};
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct BsxTitleData {
     pub title: String,
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub url: Url,
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub image: Url,
     pub rating: f64,
 }

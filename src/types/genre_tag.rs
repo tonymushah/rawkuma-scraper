@@ -16,6 +16,7 @@ use super::{FromElementRef, RawKumaResult};
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[derive(Builder, Clone)]
 pub struct MgenTag{
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub url : Url,
     pub name : String
 }

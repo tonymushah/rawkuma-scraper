@@ -16,6 +16,7 @@ use super::{RawKumaResult, FromElementRef};
 #[derive(Builder, Clone)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct UtaoTitleChapter {
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub url: Url,
     pub text: String,
 }
@@ -64,7 +65,9 @@ impl FromElementRef<'_> for UtaoTitleChapter {
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct UtaoTitleData {
     pub title: String,
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub url: Url,
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub image: Url,
     pub chapters: Vec<UtaoTitleChapter>,
 }
