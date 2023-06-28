@@ -1,14 +1,22 @@
 use derive_builder::Builder;
 use reqwest::Url;
 use scraper::{ElementRef, Selector};
-use serde::Serialize;
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
+#[cfg(feature = "getset")]
+use getset::{Getters};
 
 use crate::{handle_other_error, handle_selector_error, handle_rawkuma_result};
 
 use super::{FromElementRef, RawKumaResult};
 
-#[derive(Builder, Clone, Serialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "getset", derive(Getters))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[derive(Builder, Clone)]
 pub struct MgenTag{
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub url : Url,
     pub name : String
 }

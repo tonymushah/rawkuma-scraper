@@ -1,13 +1,20 @@
 use derive_builder::Builder;
 use reqwest::Url;
 use scraper::{ElementRef, Selector};
-use serde::Serialize;
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
+#[cfg(feature = "getset")]
+use getset::{Getters};
 
 use crate::{handle_other_error, handle_rawkuma_result, handle_selector_error};
 
 use super::{FromElementRef, RawKumaResult};
 
-#[derive(Builder, Clone, Serialize, Default)]
+#[derive(Builder, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "getset", derive(Getters))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct ChapterList {
     pub chapters: Vec<Chapter>,
 }
@@ -45,12 +52,16 @@ impl<'a> FromElementRef<'a> for ChapterList {
     }
 }
 
-#[derive(Builder, Clone, Serialize)]
+#[derive(Builder, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct Chapter {
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub url: Url,
     pub chapter_num: String,
     pub chapter_date: String,
     pub num: f32,
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub download_link: Url,
 }
 

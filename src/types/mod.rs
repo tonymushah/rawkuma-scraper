@@ -8,6 +8,7 @@ pub mod home;
 pub mod manga;
 mod reader_area;
 mod utao;
+pub mod search;
 
 pub use reader_area::{
     ReaderArea, ReaderAreaBuilder, ReaderAreaBuilderError, ReaderAreaImage, ReaderAreaImageBuilder,
@@ -21,13 +22,13 @@ pub use chapterlist::{
 };
 pub use error::RawKumaResult;
 pub use genre_tag::{MgenTag, MgenTagBuilder, MgenTagBuilderError};
-use scraper::ElementRef;
+use scraper::{ElementRef};
 pub use utao::{
     UtaoTitleChapter, UtaoTitleChapterBuilder, UtaoTitleChapterBuilderError, UtaoTitleData,
     UtaoTitleDataBuilder, UtaoTitleDataBuilderError,
 };
 
-use crate::parser::HtmlParser;
+use crate::{parser::HtmlParser};
 
 pub trait FromElementRef<'a> {
     fn from_element_ref(data: ElementRef<'a>) -> RawKumaResult<Self>
@@ -57,4 +58,8 @@ where
     fn from(parser: T) -> RawKumaResult<Self>
     where
         Self: Sized;
+}
+
+pub trait ToUrlParam<>{
+    fn to_url_param(&self) -> Vec<(String, String)>;
 }

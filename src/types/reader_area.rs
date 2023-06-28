@@ -1,13 +1,21 @@
 use derive_builder::Builder;
+use htmlize::unescape;
 use reqwest::Url;
-use scraper::{ElementRef, Selector};
-use serde::Serialize;
+use scraper::{ElementRef, Selector, Html};
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
+#[cfg(feature = "getset")]
+use getset::{Getters};
 
 use crate::{handle_other_error, handle_rawkuma_result, handle_selector_error};
 
 use super::{FromElementRef, RawKumaResult};
 
-#[derive(Builder, Clone, Serialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "getset", derive(Getters))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[derive(Builder, Clone, Default)]
 pub struct ReaderArea {
     pub images: Vec<ReaderAreaImage>,
 }
@@ -33,8 +41,17 @@ impl<'a> FromElementRef<'a> for ReaderArea {
     where
         Self: Sized,
     {
+        let selector = handle_selector_error!(Selector::parse("noscript"));
+        let data = match data.select(&selector).next() {
+            None => {
+                return RawKumaResult::Io(std::io::Error::new(std::io::ErrorKind::NotFound, "noscript element not found"));
+            },
+            Some(d) => d
+        };
+        let d = unescape(data.inner_html());
+        let data = Html::parse_fragment(d.to_string().as_str());
         let images_elements =
-            handle_rawkuma_result!(ReaderAreaImage::get_reader_area_images_element(&data));
+            handle_rawkuma_result!(ReaderAreaImage::get_reader_area_images_element_from_html(&data));
         let images: Vec<ReaderAreaImage> =
             handle_rawkuma_result!(ReaderAreaImage::from_vec_element(images_elements));
         RawKumaResult::Ok(handle_other_error!(ReaderAreaBuilder::default()
@@ -43,19 +60,31 @@ impl<'a> FromElementRef<'a> for ReaderArea {
     }
 }
 
-#[derive(Builder, Clone, Serialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Builder, Clone, Debug)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct ReaderAreaImage {
-    pub index: u32,
-    pub server: String,
+    #[cfg_attr(feature = "specta", specta(type = String))]
     pub url: Url,
+    pub width : f32,
+    pub height : f32,
+    pub decoding : String,
+    pub alt : String
 }
 
 impl<'a> ReaderAreaImage {
     pub fn get_reader_area_image_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse("img.ts-main-image")))
+        RawKumaResult::Ok(handle_selector_error!(Selector::parse("img")))
     }
+    #[warn(dead_code)]
     pub fn get_reader_area_images_element(
         data: &'a ElementRef<'a>,
+    ) -> RawKumaResult<Vec<ElementRef<'a>>> {
+        let selector = handle_rawkuma_result!(Self::get_reader_area_image_selector());
+        RawKumaResult::Ok(data.select(&selector).collect())
+    }
+    pub fn get_reader_area_images_element_from_html(
+        data: &'a Html,
     ) -> RawKumaResult<Vec<ElementRef<'a>>> {
         let selector = handle_rawkuma_result!(Self::get_reader_area_image_selector());
         RawKumaResult::Ok(data.select(&selector).collect())
@@ -67,25 +96,29 @@ impl<'a> FromElementRef<'a> for ReaderAreaImage {
     where
         Self: Sized,
     {
-        let index: u32 = match data.value().attr("data-index") {
-            None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "data-index not found",
-                ))
-            }
+        let width : f32 = match data.value().attr("width") {
+            None => 0.0,
             Some(d) => {
-                handle_other_error!(d.parse::<u32>())
+                handle_other_error!(d.parse())
             }
         };
-        let server: String = match data.value().attr("data-server") {
-            None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "data-server not found",
-                ))
+        let height : f32 = match data.value().attr("height") {
+            None => 0.0,
+            Some(d) => {
+                handle_other_error!(d.parse())
             }
-            Some(d) => d.to_string(),
+        };
+        let decoding : String = match data.value().attr("decoding") {
+            None => String::new(),
+            Some(d) => {
+                d.to_string()
+            }
+        };
+        let alt : String = match data.value().attr("alt") {
+            None => String::new(),
+            Some(d) => {
+                d.to_string()
+            }
         };
         let url: Url = match data.value().attr("src") {
             None => {
@@ -95,12 +128,14 @@ impl<'a> FromElementRef<'a> for ReaderAreaImage {
                 ))
             }
             Some(d) => {
-                handle_other_error!(Url::parse(d))
+                handle_other_error!(Url::parse(format!("http:{}", d).as_str()))
             }
         };
         RawKumaResult::Ok(handle_other_error!(ReaderAreaImageBuilder::default()
-            .index(index)
-            .server(server)
+            .width(width)
+            .height(height)
+            .decoding(decoding)
+            .alt(alt)
             .url(url)
             .build()))
     }

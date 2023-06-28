@@ -2,7 +2,7 @@ use scraper::ElementRef;
 
 use super::{get_content_element, HtmlParser};
 use crate::handle_rawkuma_result;
-use crate::types::{RawKumaResult, BixboxData, FromElementRef, ChapterList, BsxTitleData, ReaderArea};
+use crate::types::{RawKumaResult, FromElementRef, BsxTitleData, ReaderArea};
 
 #[derive(Clone)]
 pub struct RawKumaChapterParser<'a> {
@@ -21,6 +21,11 @@ impl<'a> HtmlParser<'a> for RawKumaChapterParser<'a> {
 
 impl<'a> RawKumaChapterParser<'a> {
     pub fn get_reader_area_data(&self) -> RawKumaResult<ReaderArea> {
-        todo!()
+        let reader_area = handle_rawkuma_result!(ReaderArea::get_reader_area_element(&(self.content)));
+        RawKumaResult::Ok(handle_rawkuma_result!(ReaderArea::from_element_ref(reader_area)))
+    }
+    pub fn get_related_manga(&self) -> RawKumaResult<Vec<BsxTitleData>> {
+        let bsx_elements = handle_rawkuma_result!(BsxTitleData::get_bsx_elements(&self.content));
+        BsxTitleData::from_vec_element(bsx_elements)
     }
 }
