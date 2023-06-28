@@ -1,11 +1,11 @@
 use derive_builder::Builder;
-use reqwest::Url;
+use reqwest::{Url, Client, Response};
 use scraper::{ElementRef, Selector};
 use serde::Serialize;
 
-use crate::{handle_other_error, handle_selector_error};
+use crate::{handle_other_error, handle_selector_error, RawKumaClient, client::RawKumaClientFromUrl, handle_reqwest_error};
 
-use super::RawKumaResult;
+use super::{FromElementRef, RawKumaResult, manga::RawKumaMangaDetailData};
 
 #[derive(Builder, Clone, Serialize)]
 pub struct BsxTitleData {
@@ -16,7 +16,22 @@ pub struct BsxTitleData {
 }
 
 impl BsxTitleData {
-    pub fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self> {
+    pub fn div_bsx_selector() -> RawKumaResult<Selector> {
+        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
+            r#"div[class="bsx"]"#
+        )))
+    }
+    pub async fn get_url_manga_detail(&self, client : &mut RawKumaClient) -> RawKumaResult<RawKumaMangaDetailData>{
+        RawKumaClientFromUrl::manga_details(client, self.url.clone()).await
+    }
+    pub async fn get_image_response(&self, client : Client) -> RawKumaResult<Response>{
+        let req = handle_reqwest_error!(client.get(self.image.clone()).build());
+        RawKumaResult::Ok(handle_reqwest_error!(client.execute(req).await))
+    }
+}
+
+impl FromElementRef<'_> for BsxTitleData {
+    fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self> {
         let title = match data
             .select(&handle_selector_error!(Selector::parse(r#"a"#)))
             .next()
@@ -108,19 +123,6 @@ impl BsxTitleData {
                 )
                 .as_str()
             )))
-            .build()
-        ))
-    }
-    pub fn from_vec_element(elements : Vec<ElementRef<'_>>) -> RawKumaResult<Vec<BsxTitleData>> {
-        let mut datas : Vec<BsxTitleData> = Vec::new();
-        for element in elements {
-            match Self::from_element_ref(element) {
-                RawKumaResult::Ok(d) => {
-                    datas.push(d);
-                },
-                _ => {}
-            }
-        }
-        RawKumaResult::Ok(datas)
+            .build()))
     }
 }
