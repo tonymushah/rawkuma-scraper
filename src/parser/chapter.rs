@@ -31,7 +31,12 @@ impl<'a> RawKumaChapterParser<'a> {
     pub fn get_entry_title(&self) -> RawKumaResult<String> {
         let h1_selector = handle_selector_error!(Selector::parse("h1."));
         match self.content.select(&h1_selector).next() {
-            None => Ok()
+            None => RawKumaResult::Io(std::io::Error::new(std::io::ErrorKind::NotFound, String::from("Can't find the title"))),
+            Some(title) => {
+                let titles : Vec<&str> = title.text().collect();
+                let title : String = titles.concat();
+                RawKumaResult::Ok(title)
+            }
         }
     }
 }

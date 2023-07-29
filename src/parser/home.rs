@@ -22,12 +22,12 @@ pub struct RawKumaHomeParser<'a> {
 
 impl<'a> HtmlParser<'a> for RawKumaHomeParser<'a> {
     fn init(html: &'a Html) -> RawKumaResult<Self> {
-        let popular_today = handle_rawkuma_result!(Self::find_popular_today_elements(&html));
-        let recommandation = handle_rawkuma_result!(Self::find_recomendation_elements(&html));
-        let utaos = handle_rawkuma_result!(Self::get_utao_divs(&html));
+        let popular_today = handle_rawkuma_result!(Self::find_popular_today_elements(html));
+        let recommandation = handle_rawkuma_result!(Self::find_recomendation_elements(html));
+        let utaos = handle_rawkuma_result!(Self::get_utao_divs(html));
         RawKumaResult::Ok(Self {
-            popular_today: popular_today,
-            recommandation: recommandation,
+            popular_today,
+            recommandation,
             utao_elements: utaos,
         })
     }
@@ -44,7 +44,7 @@ impl<'a> RawKumaHomeParser<'a> {
         let divs: Vec<ElementRef> = html
             .select(&handle_rawkuma_result!(Self::div_listupd_selector()))
             .collect();
-        return RawKumaResult::Ok(divs);
+        RawKumaResult::Ok(divs)
     }
 
     pub fn div_bixbox_hothome_selector() -> RawKumaResult<Selector> {
@@ -62,12 +62,12 @@ impl<'a> RawKumaHomeParser<'a> {
                 std::io::ErrorKind::NotFound,
                 r#"can't find the div[class="bixbox hothome"] componnent"#,
             )),
-            Some(d) => RawKumaResult::Ok(d.clone()),
+            Some(d) => RawKumaResult::Ok(*d),
         }
     }
 
     pub fn find_popular_today_elements(html: &'a Html) -> RawKumaResult<Vec<ElementRef<'a>>> {
-        let div = handle_rawkuma_result!(Self::get_div_bixbox_hothome(&html));
+        let div = handle_rawkuma_result!(Self::get_div_bixbox_hothome(html));
         let bsx_elements: Vec<ElementRef> = div
             .select(&handle_rawkuma_result!(BsxTitleData::div_bsx_selector()))
             .collect();
@@ -222,7 +222,7 @@ impl<'a> RawKumaHomeParser<'a> {
 
     pub fn get_recommandation(&self) -> HashMap<String, Vec<BsxTitleData>> {
         let mut result: HashMap<String, Vec<BsxTitleData>> = HashMap::new();
-        for (title, elements) in &(&self).recommandation {
+        for (title, elements) in &self.recommandation {
             match BsxTitleData::from_vec_element(elements.clone()) {
                 RawKumaResult::Ok(d) => {
                     result.insert(title.clone(), d);
@@ -235,12 +235,9 @@ impl<'a> RawKumaHomeParser<'a> {
 
     pub fn get_latest(&self) -> Vec<UtaoTitleData> {
         let mut result: Vec<UtaoTitleData> = Vec::new();
-        for element in &(&self).utao_elements {
-            match UtaoTitleData::from_element_ref(element.clone()) {
-                RawKumaResult::Ok(d) => {
-                    result.push(d);
-                }
-                _ => {}
+        for element in &self.utao_elements {
+            if let RawKumaResult::Ok(d) = UtaoTitleData::from_element_ref(*element) {
+                result.push(d);
             }
         }
         result

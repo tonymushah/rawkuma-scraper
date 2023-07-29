@@ -122,9 +122,7 @@ impl FromElementRef<'_> for BsxTitleData {
                 .as_str()
             )))
             .url(handle_other_error!(Url::parse(
-                format!(
-                    "{}",
-                    match title.value().attr("href") {
+                (match title.value().attr("href") {
                         None => {
                             return RawKumaResult::Io(std::io::Error::new(
                                 std::io::ErrorKind::NotFound,
@@ -132,8 +130,7 @@ impl FromElementRef<'_> for BsxTitleData {
                             ));
                         }
                         Some(d) => d,
-                    }
-                )
+                    }).to_string()
                 .as_str()
             )))
             .build()))
