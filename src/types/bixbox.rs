@@ -2,12 +2,12 @@ use derive_builder::Builder;
 use reqwest::Url;
 use scraper::{ElementRef, Selector};
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
-use getset::{Getters};
+use getset::Getters;
 
-use crate::{constant::BASE_URL, handle_other_error, handle_rawkuma_result, handle_selector_error};
+use crate::constant::BASE_URL;
 
 use super::{FromElementRef, MgenTag, RawKumaResult};
 
@@ -17,6 +17,7 @@ use chrono::{DateTime, FixedOffset};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
+#[builder(build_fn(error = "crate::types::error::BuilderError"))]
 pub struct BixboxData {
     pub name: String,
     #[cfg_attr(feature = "specta", specta(type = String))]
@@ -54,149 +55,116 @@ impl Default for BixboxData {
 
 impl BixboxData {
     pub fn get_bix_box_anime_full_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            "div.bixbox.animefull"
-        )))
+        RawKumaResult::Ok(Selector::parse("div.bixbox.animefull")?)
     }
     pub fn get_image_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"img[itemprop="image"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"img[itemprop="image"]"#)?)
     }
     pub fn get_name_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"h1[itemprop="name"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"h1[itemprop="name"]"#)?)
     }
     pub fn get_worst_rating_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"meta[itemprop="worstRating"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"meta[itemprop="worstRating"]"#)?)
     }
     pub fn get_best_rating_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"meta[itemprop="bestRating"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"meta[itemprop="bestRating"]"#)?)
     }
     pub fn get_rating_count_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"meta[itemprop="ratingCount"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"meta[itemprop="ratingCount"]"#)?)
     }
     pub fn get_rating_value_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"div[itemprop="ratingValue"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"div[itemprop="ratingValue"]"#)?)
     }
     pub fn get_author_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"span[itemprop="author"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"span[itemprop="author"]"#)?)
     }
     pub fn get_author_i_selector_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"i[itemprop="name"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"i[itemprop="name"]"#)?)
     }
     pub fn get_description_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"div[itemprop="description"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"div[itemprop="description"]"#)?)
     }
     pub fn get_date_modified_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"time[itemprop="dateModified"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"time[itemprop="dateModified"]"#)?)
     }
     pub fn get_date_published_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"time[itemprop="datePublished"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"time[itemprop="datePublished"]"#)?)
     }
 
     pub fn get_image_element<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_image_selector());
+        let selector = Self::get_image_selector()?;
         match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"the element img[itemprop="image"] not found"#,
+            None => RawKumaResult::Err(super::error::Error::ElementNotFound(
+                r#"img[itemprop="image"]"#.to_string(),
             )),
             Some(d) => RawKumaResult::Ok(d),
         }
     }
     pub fn get_name_element<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_name_selector());
+        let selector = Self::get_name_selector()?;
         match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"the element h1[itemprop="name"] not found"#,
+            None => RawKumaResult::Err(super::error::Error::ElementNotFound(
+                r#"h1[itemprop="name"]"#.to_string(),
             )),
             Some(d) => RawKumaResult::Ok(d),
         }
     }
     pub fn get_worst_rating_element<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_worst_rating_selector());
+        let selector = Self::get_worst_rating_selector()?;
         match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"the element meta[itemprop="worstRating"] not found"#,
+            None => RawKumaResult::Err(super::error::Error::ElementNotFound(
+                r#"meta[itemprop="worstRating"]"#.to_string(),
             )),
             Some(d) => RawKumaResult::Ok(d),
         }
     }
     pub fn get_best_rating_element<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_best_rating_selector());
+        let selector = Self::get_best_rating_selector()?;
         match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"the element meta[itemprop="bestRating"] not found"#,
+            None => RawKumaResult::Err(super::error::Error::ElementNotFound(
+                r#"meta[itemprop="bestRating"]"#.to_string(),
             )),
             Some(d) => RawKumaResult::Ok(d),
         }
     }
     pub fn get_rating_count_element<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_rating_count_selector());
+        let selector = Self::get_rating_count_selector()?;
         match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"the element meta[itemprop="ratingCount"] not found"#,
+            None => RawKumaResult::Err(super::error::Error::ElementNotFound(
+                r#"meta[itemprop="ratingCount"]"#.to_string(),
             )),
             Some(d) => RawKumaResult::Ok(d),
         }
     }
     pub fn get_rating_value_element<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_rating_value_selector());
+        let selector = Self::get_rating_value_selector()?;
         match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"the element div[itemprop="ratingValue"] not found"#,
+            None => RawKumaResult::Err(super::error::Error::ElementNotFound(
+                r#"div[itemprop="ratingValue"]"#.to_string(),
             )),
             Some(d) => RawKumaResult::Ok(d),
         }
     }
     pub fn get_author_element<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_author_selector());
-        let i_selector = handle_rawkuma_result!(Self::get_author_i_selector_selector());
+        let selector = Self::get_author_selector()?;
+        let i_selector = Self::get_author_i_selector_selector()?;
         match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"the element div[itemprop="ratingValue"] not found"#,
+            None => RawKumaResult::Err(super::error::Error::ElementNotFound(
+                r#"span[itemprop="author"]"#.to_string(),
             )),
             Some(d) => match d.select(&i_selector).next() {
-                None => RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    r#"the element i[itemprop="name"] not found"#,
+                None => RawKumaResult::Err(super::error::Error::ElementNotFound(
+                    r#"i[itemprop="name"]"#.to_string(),
                 )),
                 Some(d) => RawKumaResult::Ok(d),
             },
         }
     }
     pub fn get_description_element<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_description_selector());
+        let selector = Self::get_description_selector()?;
         match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"the element div[itemprop="description"] not found"#,
+            None => RawKumaResult::Err(super::error::Error::ElementNotFound(
+                r#"div[itemprop="description"]"#.to_string(),
             )),
             Some(d) => RawKumaResult::Ok(d),
         }
@@ -204,11 +172,10 @@ impl BixboxData {
     pub fn get_date_modified_element<'a>(
         data: &'a ElementRef<'a>,
     ) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_date_modified_selector());
+        let selector = Self::get_date_modified_selector()?;
         match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"the element time[itemprop="dateModified"] not found"#,
+            None => RawKumaResult::Err(super::error::Error::ElementNotFound(
+                r#"time[itemprop="dateModified"]"#.to_string(),
             )),
             Some(d) => RawKumaResult::Ok(d),
         }
@@ -216,66 +183,60 @@ impl BixboxData {
     pub fn get_date_published_element<'a>(
         data: &'a ElementRef<'a>,
     ) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_date_published_selector());
+        let selector = Self::get_date_published_selector()?;
         match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"the element time[itemprop="datePublished"] not found"#,
+            None => RawKumaResult::Err(super::error::Error::ElementNotFound(
+                r#"time[itemprop="datePublished"]"#.to_string(),
             )),
             Some(d) => RawKumaResult::Ok(d),
         }
     }
 
     pub fn get_image_element_data<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<(Url, String)> {
-        let element = handle_rawkuma_result!(Self::get_image_element(data));
-        let url = handle_other_error!(Url::parse(
+        let element = Self::get_image_element(data)?;
+        let url = Url::parse(
             format!(
                 "https:{}",
                 match element.value().attr("src") {
                     None => {
-                        return RawKumaResult::Io(std::io::Error::new(
-                            std::io::ErrorKind::NotFound,
-                            r#"Can't find the src attribute"#,
-                        ));
+                        return RawKumaResult::Err(super::error::Error::AttributeNotFound {
+                            name: "src".to_string(),
+                            element: r#"img[itemprop="image"]"#.to_string(),
+                        });
                     }
                     Some(d) => d,
                 }
             )
-            .as_str()
-        ));
+            .as_str(),
+        )?;
         let title: String = match element.value().attr("title") {
             None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    r#"Can't find the title attribute"#,
-                ));
+                return RawKumaResult::Err(super::error::Error::AttributeNotFound {
+                    name: "title".to_string(),
+                    element: r#"img[itemprop="image"]"#.to_string(),
+                });
             }
             Some(d) => d.to_string(),
         };
         RawKumaResult::Ok((url, title))
     }
     pub fn get_name_element_data<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<String> {
-        let element = handle_rawkuma_result!(Self::get_name_element(data));
+        let element = Self::get_name_element(data)?;
         match element.text().next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "Any text has been found",
-            )),
+            None => RawKumaResult::Err(super::error::Error::TextContentFound),
             Some(d) => RawKumaResult::Ok(d.to_string()),
         }
     }
     pub fn get_worst_rating_element_data<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<u16> {
-        let element = handle_rawkuma_result!(Self::get_worst_rating_element(data));
+        let element = Self::get_worst_rating_element(data)?;
         let content = match element.value().attr("content") {
             None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "content attribute not found",
-                ))
+                return RawKumaResult::Err(super::error::Error::AttributeNotFound {
+                    name: "content".to_string(),
+                    element: r#"meta[itemprop="worstRating"]"#.to_string(),
+                })
             }
-            Some(d) => {
-                handle_other_error!(d.parse::<u16>())
-            }
+            Some(d) => d.parse::<u16>()?,
         };
         RawKumaResult::Ok(content)
     }

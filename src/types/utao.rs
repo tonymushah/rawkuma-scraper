@@ -2,19 +2,20 @@ use derive_builder::Builder;
 use reqwest::Url;
 use scraper::{ElementRef, Selector};
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
-use getset::{Getters};
+use getset::Getters;
 
 use crate::{handle_other_error, handle_rawkuma_result, handle_selector_error};
 
-use super::{RawKumaResult, FromElementRef};
+use super::{FromElementRef, RawKumaResult};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[derive(Builder, Clone)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
+#[builder(build_fn(error = "crate::types::error::BuilderError"))]
 pub struct UtaoTitleChapter {
     #[cfg_attr(feature = "specta", specta(type = String))]
     pub url: Url,
@@ -94,7 +95,6 @@ impl<'a> UtaoTitleData {
         };
         return RawKumaResult::Ok(divs);
     }
-
 }
 
 impl FromElementRef<'_> for UtaoTitleData {
@@ -143,9 +143,9 @@ impl FromElementRef<'_> for UtaoTitleData {
                 .collect(),
         };
         RawKumaResult::Ok(handle_other_error!(UtaoTitleDataBuilder::default()
-            .chapters(handle_rawkuma_result!(
-                UtaoTitleChapter::from_vec_element(chapters)
-            ))
+            .chapters(handle_rawkuma_result!(UtaoTitleChapter::from_vec_element(
+                chapters
+            )))
             .image(handle_other_error!(Url::parse(
                 format!(
                     "https:{}",
@@ -190,5 +190,4 @@ impl FromElementRef<'_> for UtaoTitleData {
             )
             .build()))
     }
-
 }

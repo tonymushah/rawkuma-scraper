@@ -1132,6 +1132,7 @@ dependencies = [
  "serde",
  "serde_json",
  "specta",
+ "thiserror",
  "tokio",
  "url",
 ]

@@ -3,10 +3,7 @@ use std::collections::HashMap;
 use derive_builder::Builder;
 use scraper::{ElementRef, Html, Selector};
 
-use crate::{
-    handle_rawkuma_result, handle_selector_error,
-    types::{BsxTitleData, RawKumaResult, UtaoTitleData, FromElementRef},
-};
+use crate::types::{BsxTitleData, FromElementRef, RawKumaResult, UtaoTitleData};
 
 use super::HtmlParser;
 
@@ -22,9 +19,9 @@ pub struct RawKumaHomeParser<'a> {
 
 impl<'a> HtmlParser<'a> for RawKumaHomeParser<'a> {
     fn init(html: &'a Html) -> RawKumaResult<Self> {
-        let popular_today = handle_rawkuma_result!(Self::find_popular_today_elements(html));
-        let recommandation = handle_rawkuma_result!(Self::find_recomendation_elements(html));
-        let utaos = handle_rawkuma_result!(Self::get_utao_divs(html));
+        let popular_today = Self::find_popular_today_elements(html)?;
+        let recommandation = Self::find_recomendation_elements(html)?;
+        let utaos = Self::get_utao_divs(html)?;
         RawKumaResult::Ok(Self {
             popular_today,
             recommandation,
@@ -35,59 +32,43 @@ impl<'a> HtmlParser<'a> for RawKumaHomeParser<'a> {
 
 impl<'a> RawKumaHomeParser<'a> {
     pub fn div_listupd_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"div[class="listupd"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"div[class="listupd"]"#)?)
     }
 
     pub fn get_div_listupd(html: &Html) -> RawKumaResult<Vec<ElementRef>> {
-        let divs: Vec<ElementRef> = html
-            .select(&handle_rawkuma_result!(Self::div_listupd_selector()))
-            .collect();
+        let divs: Vec<ElementRef> = html.select(&(Self::div_listupd_selector()?)).collect();
         RawKumaResult::Ok(divs)
     }
 
     pub fn div_bixbox_hothome_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"div[class="bixbox hothome"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"div[class="bixbox hothome"]"#)?)
     }
 
     pub fn get_div_bixbox_hothome(html: &'a Html) -> RawKumaResult<ElementRef<'a>> {
-        let op: Vec<ElementRef> = html
-            .select(&handle_rawkuma_result!(Self::div_listupd_selector()))
-            .collect();
+        let op: Vec<ElementRef> = html.select(&(Self::div_listupd_selector()?)).collect();
         match op.get(0) {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"can't find the div[class="bixbox hothome"] componnent"#,
+            None => RawKumaResult::Err(crate::types::error::Error::ElementNotFound(
+                "div[class='bixbox hothome']".to_string(),
             )),
             Some(d) => RawKumaResult::Ok(*d),
         }
     }
 
     pub fn find_popular_today_elements(html: &'a Html) -> RawKumaResult<Vec<ElementRef<'a>>> {
-        let div = handle_rawkuma_result!(Self::get_div_bixbox_hothome(html));
-        let bsx_elements: Vec<ElementRef> = div
-            .select(&handle_rawkuma_result!(BsxTitleData::div_bsx_selector()))
-            .collect();
+        let div = Self::get_div_bixbox_hothome(html)?;
+        let bsx_elements: Vec<ElementRef> =
+            div.select(&(BsxTitleData::div_bsx_selector()?)).collect();
         RawKumaResult::Ok(bsx_elements)
     }
 
     pub fn div_series_gen_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"div[class="series-gen"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"div[class="series-gen"]"#)?)
     }
 
     pub fn get_div_series_gen(html: &'a Html) -> RawKumaResult<ElementRef<'a>> {
-        match html
-            .select(&handle_rawkuma_result!(Self::div_series_gen_selector()))
-            .next()
-        {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"can't find the div[class="series-gen"] componnent"#,
+        match html.select(&(Self::div_series_gen_selector()?)).next() {
+            None => RawKumaResult::Err(crate::types::error::Error::ElementNotFound(
+                r#"div[class="series-gen"]"#.to_string(),
             )),
             Some(d) => RawKumaResult::Ok(d),
         }
@@ -96,13 +77,13 @@ impl<'a> RawKumaHomeParser<'a> {
     pub fn find_recomendation_elements(
         html: &'a Html,
     ) -> RawKumaResult<HashMap<String, Vec<ElementRef<'a>>>> {
-        let recomm = handle_rawkuma_result!(Self::get_recommendation_themes(html));
+        let recomm = Self::get_recommendation_themes(html)?;
         let mut data: HashMap<String, Vec<ElementRef<'a>>> = HashMap::new();
         for (key, elememt) in recomm {
             data.insert(
                 key,
                 elememt
-                    .select(&handle_rawkuma_result!(BsxTitleData::div_bsx_selector()))
+                    .select(&(BsxTitleData::div_bsx_selector()?))
                     .collect(),
             );
         }
@@ -110,40 +91,26 @@ impl<'a> RawKumaHomeParser<'a> {
     }
 
     pub fn div_nav_tabs_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"ul[class="nav-tabs"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"ul[class="nav-tabs"]"#)?)
     }
 
     pub fn get_div_nav_tabs(html: &'a ElementRef) -> RawKumaResult<ElementRef<'a>> {
-        match html
-            .select(&handle_rawkuma_result!(Self::div_series_gen_selector()))
-            .next()
-        {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"can't find the ul[class="nav-tabs"] componnent"#,
+        match html.select(&(Self::div_series_gen_selector()?)).next() {
+            None => RawKumaResult::Err(crate::types::error::Error::ElementNotFound(
+                r#"ul[class="nav-tabs"]"#.to_string(),
             )),
             Some(d) => RawKumaResult::Ok(d),
         }
     }
 
     pub fn get_nav_serie_gen_divs(html: &'a Html) -> RawKumaResult<ElementRef<'a>> {
-        match html
-            .select(&handle_rawkuma_result!(Self::div_series_gen_selector()))
-            .next()
-        {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                r#"can't find the div[class="series-gen"] componnent"#,
+        match html.select(&(Self::div_series_gen_selector()?)).next() {
+            None => RawKumaResult::Err(crate::types::error::Error::ElementNotFound(
+                r#"div[class="series-gen"]"#.to_string(),
             )),
-            Some(d) => match d
-                .select(&handle_rawkuma_result!(Self::div_nav_tabs_selector()))
-                .next()
-            {
-                None => RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    r#"can't find the ul[class="nav-tabs"] componnent"#,
+            Some(d) => match d.select(&(Self::div_nav_tabs_selector()?)).next() {
+                None => RawKumaResult::Err(crate::types::error::Error::ElementNotFound(
+                    r#"ul[class="nav-tabs"]"#.to_string(),
                 )),
                 Some(d) => RawKumaResult::Ok(d),
             },
@@ -154,32 +121,27 @@ impl<'a> RawKumaHomeParser<'a> {
         html: &'a Html,
     ) -> RawKumaResult<HashMap<String, ElementRef<'a>>> {
         let mut refs: HashMap<String, ElementRef<'a>> = HashMap::new();
-        let selector = handle_selector_error!(Selector::parse("a"));
-        for theme in handle_rawkuma_result!(Self::get_nav_serie_gen_divs(html)).select(&selector) {
+        let a = "a".to_string();
+        let selector = Selector::parse(a.as_str())?;
+        for theme in (Self::get_nav_serie_gen_divs(html)?).select(&selector) {
             let text = match theme.text().next() {
-                None => {
-                    return RawKumaResult::Io(std::io::Error::new(
-                        std::io::ErrorKind::NotFound,
-                        r#"can't find the text in componnent"#,
-                    ))
-                }
+                None => return RawKumaResult::Err(crate::types::error::Error::ElementNotFound(a)),
                 Some(d) => d.to_string(),
             };
             let href = match theme.value().attr("href") {
                 None => {
-                    return RawKumaResult::Io(std::io::Error::new(
-                        std::io::ErrorKind::NotFound,
-                        r#"can't find the href attribute in componnent"#,
-                    ))
+                    return RawKumaResult::Err(crate::types::error::Error::AttributeNotFound {
+                        name: "href".to_string(),
+                        element: a,
+                    })
                 }
                 Some(d) => d,
             };
-            let selector_ = handle_selector_error!(Selector::parse(href));
+            let selector_ = Selector::parse(href)?;
             let element = match html.select(&selector_).next() {
                 None => {
-                    return RawKumaResult::Io(std::io::Error::new(
-                        std::io::ErrorKind::NotFound,
-                        format!("can't find the {} componnent", href),
+                    return RawKumaResult::Err(crate::types::error::Error::ElementNotFound(
+                        href.to_string(),
                     ))
                 }
                 Some(d) => d,
@@ -190,14 +152,12 @@ impl<'a> RawKumaHomeParser<'a> {
     }
 
     pub fn div_utao_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"div[class="utao"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"div[class="utao"]"#)?)
     }
 
     pub fn get_utao_divs(html: &'a Html) -> RawKumaResult<Vec<ElementRef<'a>>> {
         RawKumaResult::Ok(
-            html.select(&handle_rawkuma_result!(Self::div_utao_selector()))
+            html.select(&(Self::div_utao_selector()?))
                 .collect::<Vec<ElementRef<'a>>>(),
         )
     }

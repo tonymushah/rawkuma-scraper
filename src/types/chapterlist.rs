@@ -2,10 +2,10 @@ use derive_builder::Builder;
 use reqwest::Url;
 use scraper::{ElementRef, Selector};
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
-use getset::{Getters};
+use getset::Getters;
 
 use crate::{handle_other_error, handle_rawkuma_result, handle_selector_error};
 
@@ -15,13 +15,16 @@ use super::{FromElementRef, RawKumaResult};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
+#[builder(build_fn(error = "crate::types::error::BuilderError"))]
 pub struct ChapterList {
     pub chapters: Vec<Chapter>,
 }
 
 impl<'a> ChapterList {
     pub fn get_chapter_list_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(r#"div#chapterlist"#)))
+        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
+            r#"div#chapterlist"#
+        )))
     }
     pub fn get_chapter_list_element(data: &'a ElementRef) -> RawKumaResult<ElementRef<'a>> {
         let selector = handle_rawkuma_result!(Self::get_chapter_list_selector());
