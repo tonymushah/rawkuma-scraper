@@ -3,7 +3,6 @@ use scraper::{Html, Selector, ElementRef};
 use crate::{types::RawKumaResult, handle_selector_error, handle_rawkuma_result};
 
 pub mod home;
-pub mod manga;
 pub mod manga_details;
 pub mod chapter;
 pub mod search;

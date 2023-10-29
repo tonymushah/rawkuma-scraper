@@ -9,7 +9,7 @@ use getset::{Getters};
 
 use crate::{parser::home::RawKumaHomeParser, handle_other_error};
 
-use super::{BsxTitleData, UtaoTitleData, FromHtmlParser, RawKumaResult};
+use super::{BsxTitleData, UtaoTitleData, FromHtmlParser, RawKumaResult, ToUrlParam};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "getset", derive(Getters))]
@@ -29,5 +29,27 @@ impl<'a> FromHtmlParser<'a, RawKumaHomeParser<'a>> for RawKumaHomeData {
             .latest_update(home.get_latest())
             .build());
         RawKumaResult::Ok(data)
+    }
+}
+
+#[derive(Clone, Builder)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "getset", derive(Getters))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct HomeParameters{
+    pub page : u32
+}
+
+impl Default for HomeParameters {
+    fn default() -> Self {
+        Self { page: 1 }
+    }
+}
+
+impl ToUrlParam for HomeParameters{
+    fn to_url_param(&self) -> Vec<(String, String)> {
+        let mut vec : Vec<(String, String)> = Vec::new();
+        vec.push(("page".to_string(), format!("{}", self.page)));
+        return vec;
     }
 }

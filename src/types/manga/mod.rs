@@ -10,7 +10,6 @@ use crate::{
 };
 
 mod details;
-mod list_paramed;
 
 pub use details::{RawKumaMangaDetailData, RawKumaMangaDetailDataBuilder, RawKumaMangaDetailDataBuilderError};
 
