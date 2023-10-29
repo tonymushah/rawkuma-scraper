@@ -1,24 +1,25 @@
 use derive_builder::Builder;
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
 use getset::{Getters, Setters};
 
-use crate::{
-    handle_other_error, handle_rawkuma_result, parser::manga_details::RawKumaMangaDetailParser
-};
+use crate::parser::manga_details::RawKumaMangaDetailParser;
 
-use crate::types::{BixboxData, FromHtmlParser, RawKumaResult, chapterlist::ChapterList, BsxTitleData};
+use crate::types::{
+    chapterlist::ChapterList, BixboxData, BsxTitleData, FromHtmlParser, RawKumaResult,
+};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Builder, Default)]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
+#[builder(build_fn(error = "crate::types::error::BuilderError"))]
 pub struct RawKumaMangaDetailData {
     pub data: BixboxData,
-    pub chapterlist : ChapterList,
-    pub related_series : Vec<BsxTitleData>
+    pub chapterlist: ChapterList,
+    pub related_series: Vec<BsxTitleData>,
 }
 
 impl<'a> FromHtmlParser<'a, RawKumaMangaDetailParser<'a>> for RawKumaMangaDetailData {
@@ -26,11 +27,12 @@ impl<'a> FromHtmlParser<'a, RawKumaMangaDetailParser<'a>> for RawKumaMangaDetail
     where
         Self: Sized,
     {
-        RawKumaResult::Ok(handle_other_error!(RawKumaMangaDetailDataBuilder::default(
+        RawKumaResult::Ok(
+            RawKumaMangaDetailDataBuilder::default()
+                .data(parser.get_bixbox_data()?)
+                .chapterlist(parser.get_chapter_list()?)
+                .related_series(parser.get_related_series()?)
+                .build()?,
         )
-        .data(handle_rawkuma_result!(parser.get_bixbox_data()))
-        .chapterlist(handle_rawkuma_result!(parser.get_chapter_list()))
-        .related_series(handle_rawkuma_result!(parser.get_related_series()))
-        .build()))
     }
 }

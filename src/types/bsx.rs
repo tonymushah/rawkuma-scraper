@@ -1,20 +1,24 @@
 use derive_builder::Builder;
-use reqwest::{Url, Client, Response};
+use reqwest::{Client, Response, Url};
 use scraper::{ElementRef, Selector};
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
-use getset::{Getters};
+use getset::Getters;
 
-use crate::{handle_other_error, handle_selector_error, RawKumaClient, client::RawKumaClientFromUrl, handle_reqwest_error, handle_rawkuma_result};
+use crate::{
+    client::RawKumaClientFromUrl, handle_other_error, handle_rawkuma_result, handle_reqwest_error,
+    handle_selector_error, RawKumaClient,
+};
 
-use super::{FromElementRef, RawKumaResult, manga::RawKumaMangaDetailData};
+use super::{manga::RawKumaMangaDetailData, FromElementRef, RawKumaResult};
 
 #[derive(Builder, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
+#[builder(build_fn(error = "crate::types::error::BuilderError"))]
 pub struct BsxTitleData {
     pub title: String,
     #[cfg_attr(feature = "specta", specta(type = String))]
@@ -30,14 +34,17 @@ impl BsxTitleData {
             r#"div[class="bsx"]"#
         )))
     }
-    pub async fn get_url_manga_detail(&self, client : &mut RawKumaClient) -> RawKumaResult<RawKumaMangaDetailData>{
+    pub async fn get_url_manga_detail(
+        &self,
+        client: &mut RawKumaClient,
+    ) -> RawKumaResult<RawKumaMangaDetailData> {
         RawKumaClientFromUrl::manga_details(client, self.url.clone()).await
     }
-    pub async fn get_image_response(&self, client : Client) -> RawKumaResult<Response>{
+    pub async fn get_image_response(&self, client: Client) -> RawKumaResult<Response> {
         let req = handle_reqwest_error!(client.get(self.image.clone()).build());
         RawKumaResult::Ok(handle_reqwest_error!(client.execute(req).await))
     }
-    pub fn get_bsx_elements<'a>(data : &'a ElementRef<'a>) -> RawKumaResult<Vec<ElementRef<'a>>> {
+    pub fn get_bsx_elements<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<Vec<ElementRef<'a>>> {
         let selector = handle_rawkuma_result!(Self::div_bsx_selector());
         RawKumaResult::Ok(data.select(&selector).collect())
     }
@@ -122,18 +129,16 @@ impl FromElementRef<'_> for BsxTitleData {
                 .as_str()
             )))
             .url(handle_other_error!(Url::parse(
-                format!(
-                    "{}",
-                    match title.value().attr("href") {
-                        None => {
-                            return RawKumaResult::Io(std::io::Error::new(
-                                std::io::ErrorKind::NotFound,
-                                r#"Can't find the href attribute"#,
-                            ));
-                        }
-                        Some(d) => d,
+                (match title.value().attr("href") {
+                    None => {
+                        return RawKumaResult::Io(std::io::Error::new(
+                            std::io::ErrorKind::NotFound,
+                            r#"Can't find the href attribute"#,
+                        ));
                     }
-                )
+                    Some(d) => d,
+                })
+                .to_string()
                 .as_str()
             )))
             .build()))

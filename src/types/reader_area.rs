@@ -1,12 +1,12 @@
 use derive_builder::Builder;
 use htmlize::unescape;
 use reqwest::Url;
-use scraper::{ElementRef, Selector, Html};
+use scraper::{ElementRef, Html, Selector};
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
-use getset::{Getters};
+use getset::Getters;
 
 use crate::{handle_other_error, handle_rawkuma_result, handle_selector_error};
 
@@ -16,6 +16,7 @@ use super::{FromElementRef, RawKumaResult};
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[derive(Builder, Clone, Default)]
+#[builder(build_fn(error = "crate::types::error::BuilderError"))]
 pub struct ReaderArea {
     pub images: Vec<ReaderAreaImage>,
 }
@@ -44,14 +45,18 @@ impl<'a> FromElementRef<'a> for ReaderArea {
         let selector = handle_selector_error!(Selector::parse("noscript"));
         let data = match data.select(&selector).next() {
             None => {
-                return RawKumaResult::Io(std::io::Error::new(std::io::ErrorKind::NotFound, "noscript element not found"));
-            },
-            Some(d) => d
+                return RawKumaResult::Io(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "noscript element not found",
+                ));
+            }
+            Some(d) => d,
         };
         let d = unescape(data.inner_html());
         let data = Html::parse_fragment(d.to_string().as_str());
-        let images_elements =
-            handle_rawkuma_result!(ReaderAreaImage::get_reader_area_images_element_from_html(&data));
+        let images_elements = handle_rawkuma_result!(
+            ReaderAreaImage::get_reader_area_images_element_from_html(&data)
+        );
         let images: Vec<ReaderAreaImage> =
             handle_rawkuma_result!(ReaderAreaImage::from_vec_element(images_elements));
         RawKumaResult::Ok(handle_other_error!(ReaderAreaBuilder::default()
@@ -66,10 +71,10 @@ impl<'a> FromElementRef<'a> for ReaderArea {
 pub struct ReaderAreaImage {
     #[cfg_attr(feature = "specta", specta(type = String))]
     pub url: Url,
-    pub width : f32,
-    pub height : f32,
-    pub decoding : String,
-    pub alt : String
+    pub width: f32,
+    pub height: f32,
+    pub decoding: String,
+    pub alt: String,
 }
 
 impl<'a> ReaderAreaImage {
@@ -96,29 +101,25 @@ impl<'a> FromElementRef<'a> for ReaderAreaImage {
     where
         Self: Sized,
     {
-        let width : f32 = match data.value().attr("width") {
+        let width: f32 = match data.value().attr("width") {
             None => 0.0,
             Some(d) => {
                 handle_other_error!(d.parse())
             }
         };
-        let height : f32 = match data.value().attr("height") {
+        let height: f32 = match data.value().attr("height") {
             None => 0.0,
             Some(d) => {
                 handle_other_error!(d.parse())
             }
         };
-        let decoding : String = match data.value().attr("decoding") {
+        let decoding: String = match data.value().attr("decoding") {
             None => String::new(),
-            Some(d) => {
-                d.to_string()
-            }
+            Some(d) => d.to_string(),
         };
-        let alt : String = match data.value().attr("alt") {
+        let alt: String = match data.value().attr("alt") {
             None => String::new(),
-            Some(d) => {
-                d.to_string()
-            }
+            Some(d) => d.to_string(),
         };
         let url: Url = match data.value().attr("src") {
             None => {

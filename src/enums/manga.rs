@@ -5,5 +5,5 @@ mod r#type;
 
 pub use genre::Genre;
 pub use order::Order;
-pub use status::Status;
 pub use r#type::Type;
+pub use status::Status;

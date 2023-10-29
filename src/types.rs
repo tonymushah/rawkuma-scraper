@@ -1,19 +1,15 @@
-mod bixbox;
-mod bsx;
+pub mod bixbox;
+pub mod bsx;
 pub mod chapter;
-mod chapterlist;
-mod error;
-mod genre_tag;
+pub mod chapterlist;
+pub mod error;
+pub mod genre_tag;
 pub mod home;
 pub mod manga;
-mod reader_area;
-mod utao;
+pub mod reader_area;
 pub mod search;
+pub mod utao;
 
-pub use reader_area::{
-    ReaderArea, ReaderAreaBuilder, ReaderAreaBuilderError, ReaderAreaImage, ReaderAreaImageBuilder,
-    ReaderAreaImageBuilderError,
-};
 pub use bixbox::{BixboxData, BixboxDataBuilder, BixboxDataBuilderError};
 pub use bsx::{BsxTitleData, BsxTitleDataBuilder, BsxTitleDataBuilderError};
 pub use chapterlist::{
@@ -22,13 +18,17 @@ pub use chapterlist::{
 };
 pub use error::RawKumaResult;
 pub use genre_tag::{MgenTag, MgenTagBuilder, MgenTagBuilderError};
-use scraper::{ElementRef};
+pub use reader_area::{
+    ReaderArea, ReaderAreaBuilder, ReaderAreaBuilderError, ReaderAreaImage, ReaderAreaImageBuilder,
+    ReaderAreaImageBuilderError,
+};
+use scraper::ElementRef;
 pub use utao::{
     UtaoTitleChapter, UtaoTitleChapterBuilder, UtaoTitleChapterBuilderError, UtaoTitleData,
     UtaoTitleDataBuilder, UtaoTitleDataBuilderError,
 };
 
-use crate::{parser::HtmlParser};
+use crate::parser::HtmlParser;
 
 pub trait FromElementRef<'a> {
     fn from_element_ref(data: ElementRef<'a>) -> RawKumaResult<Self>
@@ -60,6 +60,6 @@ where
         Self: Sized;
 }
 
-pub trait ToUrlParam<>{
+pub trait ToUrlParam {
     fn to_url_param(&self) -> Vec<(String, String)>;
 }
