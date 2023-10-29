@@ -26,7 +26,7 @@ pub struct BixboxData {
     pub best_rating: u16,
     pub rating_count: u32,
     pub rating_value: f32,
-    pub description: String,
+    pub description: Option<String>,
     pub author: String,
     pub date_published: DateTime<FixedOffset>,
     pub date_modified: DateTime<FixedOffset>,
@@ -241,98 +241,87 @@ impl BixboxData {
         RawKumaResult::Ok(content)
     }
     pub fn get_best_rating_element_data<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<u16> {
-        let element = handle_rawkuma_result!(Self::get_best_rating_element(data));
+        let element = Self::get_best_rating_element(data)?;
         let content = match element.value().attr("content") {
             None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "content attribute not found",
-                ))
+                return RawKumaResult::Err(super::error::Error::AttributeNotFound {
+                    name: "content".to_string(),
+                    element: r#"meta[itemprop="bestRating"]"#.to_string(),
+                })
             }
-            Some(d) => {
-                handle_other_error!(d.parse::<u16>())
-            }
+            Some(d) => d.parse::<u16>()?,
         };
         RawKumaResult::Ok(content)
     }
     pub fn get_rating_count_element_data<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<u32> {
-        let element = handle_rawkuma_result!(Self::get_rating_count_element(data));
+        let element = Self::get_rating_count_element(data)?;
         let content = match element.value().attr("content") {
             None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "content attribute not found",
-                ))
+                return RawKumaResult::Err(super::error::Error::AttributeNotFound {
+                    name: "content".to_string(),
+                    element: r#"meta[itemprop="ratingCount"]"#.to_string(),
+                })
             }
-            Some(d) => {
-                handle_other_error!(d.parse::<u32>())
-            }
+            Some(d) => d.parse::<u32>()?,
         };
         RawKumaResult::Ok(content)
     }
     pub fn get_rating_value_element_data<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<f32> {
-        let element = handle_rawkuma_result!(Self::get_rating_value_element(data));
+        let element = Self::get_rating_value_element(data)?;
         let content = match element.value().attr("content") {
             None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "content attribute not found",
-                ))
+                return RawKumaResult::Err(super::error::Error::AttributeNotFound {
+                    name: "content".to_string(),
+                    element: r#"div[itemprop="ratingValue"]"#.to_string(),
+                })
             }
-            Some(d) => {
-                handle_other_error!(d.parse::<f32>())
-            }
+            Some(d) => d.parse::<f32>()?,
         };
         RawKumaResult::Ok(content)
     }
     pub fn get_author_element_data<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<String> {
-        let element = handle_rawkuma_result!(Self::get_author_element(data));
+        let element = Self::get_author_element(data)?;
         match element.text().next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "Any text has been found",
-            )),
+            None => RawKumaResult::Err(super::error::Error::TextContentFound),
             Some(d) => RawKumaResult::Ok(d.to_string()),
         }
     }
-    pub fn get_description_element_data<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<String> {
-        let element = handle_rawkuma_result!(Self::get_description_element(data));
+    pub fn get_description_element_data<'a>(
+        data: &'a ElementRef<'a>,
+    ) -> RawKumaResult<Option<String>> {
+        let element = Self::get_description_element(data)?;
         match element.text().next() {
-            None => RawKumaResult::Ok(String::new()),
-            Some(d) => RawKumaResult::Ok(d.to_string()),
+            None => RawKumaResult::Ok(None),
+            Some(d) => RawKumaResult::Ok(Some(d.to_string())),
         }
     }
     pub fn get_date_modified_element_data<'a>(
         data: &'a ElementRef<'a>,
     ) -> RawKumaResult<DateTime<FixedOffset>> {
-        let element = handle_rawkuma_result!(Self::get_date_modified_element(data));
+        let element = Self::get_date_modified_element(data)?;
         let datetime = match element.value().attr("datetime") {
             None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "datetime attribute not found",
-                ))
+                return RawKumaResult::Err(super::error::Error::AttributeNotFound {
+                    name: "datetime".to_string(),
+                    element: r#"time[itemprop="dateModified"]"#.to_string(),
+                })
             }
-            Some(d) => {
-                handle_other_error!(DateTime::parse_from_rfc3339(d))
-            }
+            Some(d) => DateTime::parse_from_rfc3339(d)?,
         };
         RawKumaResult::Ok(datetime)
     }
     pub fn get_date_published_element_data<'a>(
         data: &'a ElementRef<'a>,
     ) -> RawKumaResult<DateTime<FixedOffset>> {
-        let element = handle_rawkuma_result!(Self::get_date_published_element(data));
+        let element = Self::get_date_published_element(data)?;
         let datetime = match element.value().attr("datetime") {
             None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "datetime attribute not found",
-                ))
+                return RawKumaResult::Err(super::error::Error::AttributeNotFound {
+                    name: "datetime".to_string(),
+                    element: r#"time[itemprop="datePublished"]"#.to_string(),
+                })
             }
-            Some(d) => {
-                handle_other_error!(DateTime::parse_from_rfc3339(d))
-            }
+            Some(d) => DateTime::parse_from_rfc3339(d)?,
         };
         RawKumaResult::Ok(datetime)
     }
@@ -343,36 +332,22 @@ impl FromElementRef<'_> for BixboxData {
     where
         Self: Sized,
     {
-        let (image, title) = handle_rawkuma_result!(Self::get_image_element_data(&data));
-        RawKumaResult::Ok(handle_other_error!(BixboxDataBuilder::default()
-            .image(image)
-            .title(title)
-            .name(handle_rawkuma_result!(Self::get_name_element_data(&data)))
-            .worst_rating(handle_rawkuma_result!(Self::get_worst_rating_element_data(
-                &data
-            )))
-            .best_rating(handle_rawkuma_result!(Self::get_best_rating_element_data(
-                &data
-            )))
-            .rating_count(handle_rawkuma_result!(Self::get_rating_count_element_data(
-                &data
-            )))
-            .rating_value(handle_rawkuma_result!(Self::get_rating_value_element_data(
-                &data
-            )))
-            .description(handle_rawkuma_result!(Self::get_description_element_data(
-                &data
-            )))
-            .author(handle_rawkuma_result!(Self::get_author_element_data(&data)))
-            .date_modified(handle_rawkuma_result!(
-                Self::get_date_modified_element_data(&data)
-            ))
-            .date_published(handle_rawkuma_result!(
-                Self::get_date_published_element_data(&data)
-            ))
-            .genres(handle_rawkuma_result!(MgenTag::get_tags_elements_data(
-                &data
-            )))
-            .build()))
+        let (image, title) = Self::get_image_element_data(&data)?;
+        RawKumaResult::Ok(
+            BixboxDataBuilder::default()
+                .image(image)
+                .title(title)
+                .name(Self::get_name_element_data(&data)?)
+                .worst_rating(Self::get_worst_rating_element_data(&data)?)
+                .best_rating(Self::get_best_rating_element_data(&data)?)
+                .rating_count(Self::get_rating_count_element_data(&data)?)
+                .rating_value(Self::get_rating_value_element_data(&data)?)
+                .description(Self::get_description_element_data(&data)?)
+                .author(Self::get_author_element_data(&data)?)
+                .date_modified(Self::get_date_modified_element_data(&data)?)
+                .date_published(Self::get_date_published_element_data(&data)?)
+                .genres(MgenTag::get_tags_elements_data(&data)?)
+                .build()?,
+        )
     }
 }

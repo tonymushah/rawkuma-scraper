@@ -7,8 +7,6 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "getset")]
 use getset::Getters;
 
-use crate::{handle_other_error, handle_rawkuma_result, handle_selector_error};
-
 use super::{FromElementRef, RawKumaResult};
 
 #[derive(Builder, Clone, Default)]
@@ -22,22 +20,18 @@ pub struct ChapterList {
 
 impl<'a> ChapterList {
     pub fn get_chapter_list_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"div#chapterlist"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"div#chapterlist"#)?)
     }
     pub fn get_chapter_list_element(data: &'a ElementRef) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_chapter_list_selector());
-        match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "#chapterlist element not found",
-            )),
-            Some(d) => RawKumaResult::Ok(d),
-        }
+        let selector = Self::get_chapter_list_selector()?;
+        data.select(&selector)
+            .next()
+            .ok_or(super::error::Error::ElementNotFound(
+                r#"div#chapterlist"#.to_string(),
+            ))
     }
     pub fn get_chapters_elements(data: &'a ElementRef) -> RawKumaResult<Vec<ElementRef<'a>>> {
-        let selector = handle_rawkuma_result!(Chapter::get_data_num_selector());
+        let selector = Chapter::get_data_num_selector()?;
         RawKumaResult::Ok(data.select(&selector).collect())
     }
 }
@@ -47,11 +41,13 @@ impl<'a> FromElementRef<'a> for ChapterList {
     where
         Self: Sized,
     {
-        RawKumaResult::Ok(handle_other_error!(ChapterListBuilder::default()
-            .chapters(handle_rawkuma_result!(Chapter::from_vec_element(
-                handle_rawkuma_result!(Self::get_chapters_elements(&data))
-            )))
-            .build()))
+        RawKumaResult::Ok(
+            ChapterListBuilder::default()
+                .chapters(Chapter::from_vec_element(Self::get_chapters_elements(
+                    &data,
+                )?)?)
+                .build()?,
+        )
     }
 }
 
@@ -70,81 +66,75 @@ pub struct Chapter {
 
 impl<'a> Chapter {
     pub fn get_data_num_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse("li[data-num]")))
+        RawKumaResult::Ok(Selector::parse("li[data-num]")?)
     }
     pub fn get_eph_num_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse("div.eph-num")))
+        RawKumaResult::Ok(Selector::parse("div.eph-num")?)
     }
     pub fn get_dload_a_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse("a.dload")))
+        RawKumaResult::Ok(Selector::parse("a.dload")?)
     }
     fn get_a_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse("a")))
+        RawKumaResult::Ok(Selector::parse("a")?)
     }
     fn get_chapternum_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(".chapternum")))
+        RawKumaResult::Ok(Selector::parse(".chapternum")?)
     }
     fn get_chapterdate_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(".chapterdate")))
+        RawKumaResult::Ok(Selector::parse(".chapterdate")?)
     }
 
     pub fn get_eph_num_element(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_eph_num_selector());
-        match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "div.eph-num element not found",
-            )),
-            Some(d) => RawKumaResult::Ok(d),
-        }
+        let selector = Self::get_eph_num_selector()?;
+        data.select(&selector)
+            .next()
+            .ok_or(super::error::Error::ElementNotFound(
+                "div.eph-num".to_string(),
+            ))
     }
     pub fn get_dload_element(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_dload_a_selector());
-        match data.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "a.dload element not found",
-            )),
-            Some(d) => RawKumaResult::Ok(d),
-        }
+        let selector = Self::get_dload_a_selector()?;
+        data.select(&selector)
+            .next()
+            .ok_or(super::error::Error::ElementNotFound("a.dload".to_string()))
     }
     pub fn get_a_ephnum_element(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_a_selector());
-        let ephnum = handle_rawkuma_result!(Self::get_eph_num_element(data));
-        match ephnum.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "a element not found in .eph-num element",
-            )),
-            Some(d) => RawKumaResult::Ok(d),
-        }
+        let selector = Self::get_a_selector()?;
+        let ephnum = Self::get_eph_num_element(data)?;
+        ephnum
+            .select(&selector)
+            .next()
+            .ok_or(super::error::Error::ElementNotFoundInNested {
+                element: "a".to_string(),
+                parent: "div.eph-num".to_string(),
+            })
     }
     pub fn get_chapterdate_element(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_chapterdate_selector());
-        let a_ephnum = handle_rawkuma_result!(Self::get_a_ephnum_element(data));
-        match a_ephnum.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                ".chapternum element not found in a > .eph-num element",
-            )),
-            Some(d) => RawKumaResult::Ok(d),
-        }
+        let selector = Self::get_chapterdate_selector()?;
+        let a_ephnum = Self::get_a_ephnum_element(data)?;
+        a_ephnum
+            .select(&selector)
+            .next()
+            .ok_or(super::error::Error::ElementNotFoundInNested {
+                element: ".chapternum".to_string(),
+                parent: "a > .eph-num".to_string(),
+            })
     }
     pub fn get_chapternum_element(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let selector = handle_rawkuma_result!(Self::get_chapternum_selector());
-        let a_ephnum = handle_rawkuma_result!(Self::get_a_ephnum_element(data));
-        match a_ephnum.select(&selector).next() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                ".chapternum element not found in a > .eph-num element",
-            )),
-            Some(d) => RawKumaResult::Ok(d),
-        }
+        let selector = Self::get_chapternum_selector()?;
+        let a_ephnum = Self::get_a_ephnum_element(data)?;
+        a_ephnum
+            .select(&selector)
+            .next()
+            .ok_or(super::error::Error::ElementNotFoundInNested {
+                element: ".chapternum".to_string(),
+                parent: "a > .eph-num".to_string(),
+            })
     }
 
     pub fn get_a_ephnum_data(data: &'a ElementRef<'a>) -> RawKumaResult<Url> {
-        let a_ephnum = handle_rawkuma_result!(Self::get_a_ephnum_element(data));
-        match a_ephnum.value().attr("href") {
+        let a_ephnum = Self::get_a_ephnum_element(data)?;
+        match a_ephnum.value().attr("href").ok_or() {
             None => RawKumaResult::Io(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
                 "href attribute not found in a > .eph-num element",

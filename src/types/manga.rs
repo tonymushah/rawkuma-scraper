@@ -8,7 +8,6 @@ use getset::{Getters, Setters};
 use crate::enums::manga::{Genre, Order, Status, Type};
 
 mod details;
-mod list_paramed;
 
 pub use details::{RawKumaMangaDetailData, RawKumaMangaDetailDataBuilder};
 

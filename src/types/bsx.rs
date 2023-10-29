@@ -7,10 +7,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "getset")]
 use getset::Getters;
 
-use crate::{
-    client::RawKumaClientFromUrl, handle_other_error, handle_rawkuma_result, handle_reqwest_error,
-    handle_selector_error, RawKumaClient,
-};
+use crate::{client::RawKumaClientFromUrl, RawKumaClient};
 
 use super::{manga::RawKumaMangaDetailData, FromElementRef, RawKumaResult};
 
@@ -28,11 +25,15 @@ pub struct BsxTitleData {
     pub rating: f64,
 }
 
+#[derive(Debug, Clone)]
+pub struct TitleData {
+    pub title: String,
+    pub url: Url,
+}
+
 impl BsxTitleData {
     pub fn div_bsx_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"div[class="bsx"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"div[class="bsx"]"#)?)
     }
     pub async fn get_url_manga_detail(
         &self,
@@ -41,106 +42,92 @@ impl BsxTitleData {
         RawKumaClientFromUrl::manga_details(client, self.url.clone()).await
     }
     pub async fn get_image_response(&self, client: Client) -> RawKumaResult<Response> {
-        let req = handle_reqwest_error!(client.get(self.image.clone()).build());
-        RawKumaResult::Ok(handle_reqwest_error!(client.execute(req).await))
+        let req = client.get(self.image.clone()).build()?;
+        RawKumaResult::Ok(client.execute(req).await?)
+    }
+    pub fn get_rating_selector() -> RawKumaResult<Selector> {
+        Ok(Selector::parse(r#"div[class="numscore"]"#)?)
     }
     pub fn get_bsx_elements<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<Vec<ElementRef<'a>>> {
-        let selector = handle_rawkuma_result!(Self::div_bsx_selector());
+        let selector = Self::div_bsx_selector()?;
         RawKumaResult::Ok(data.select(&selector).collect())
+    }
+    pub fn get_title_element<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
+        match data.select(&(Selector::parse(r#"a"#)?)).next() {
+            None => RawKumaResult::Err(super::error::Error::ElementNotFound("a".to_string())),
+            Some(d) => Ok(d),
+        }
+    }
+    pub fn get_image_element<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
+        match data.select(&(Selector::parse("img")?)).next() {
+            None => Err(super::error::Error::ElementNotFound("img".to_string())),
+            Some(d) => Ok(d),
+        }
+    }
+    pub fn get_rating_element<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
+        match data.select(&(Self::get_rating_selector()?)).next() {
+            None => RawKumaResult::Err(super::error::Error::ElementNotFound(
+                r#"div[class="numscore"]"#.to_string(),
+            )),
+            Some(d) => Ok(d),
+        }
+    }
+    pub fn get_title_data<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<TitleData> {
+        let _title = Self::get_title_element(&data)?;
+        Ok(TitleData {
+            title: _title
+                .value()
+                .attr("title")
+                .ok_or(super::error::Error::AttributeNotFound {
+                    name: "title".to_string(),
+                    element: "a".to_string(),
+                })?
+                .to_string(),
+            url: Url::parse(_title.value().attr("href").ok_or(
+                super::error::Error::AttributeNotFound {
+                    name: "href".to_string(),
+                    element: "a".to_string(),
+                },
+            )?)?,
+        })
+    }
+    pub fn get_img_url<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<Url> {
+        let image = Self::get_image_element(&data)?;
+        Ok(Url::parse(
+            format!(
+                "https:{}",
+                image
+                    .value()
+                    .attr("src")
+                    .ok_or(super::error::Error::AttributeNotFound {
+                        name: "href".to_string(),
+                        element: "a".to_string(),
+                    })?
+            )
+            .as_str(),
+        )?)
+    }
+    pub fn get_rating<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<f64> {
+        let rating = Self::get_rating_element(&data)?;
+        Ok(rating
+            .text()
+            .next()
+            .ok_or(super::error::Error::TextContentFound)?
+            .parse::<f64>()?)
     }
 }
 
 impl FromElementRef<'_> for BsxTitleData {
     fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self> {
-        let title = match data
-            .select(&handle_selector_error!(Selector::parse(r#"a"#)))
-            .next()
-        {
-            None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "Can't find the a element",
-                ))
-            }
-            Some(d) => d,
-        };
-        let image = match data
-            .select(&handle_selector_error!(Selector::parse("img")))
-            .next()
-        {
-            None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "Can't find the img element",
-                ))
-            }
-            Some(d) => d,
-        };
-        let rating = match data
-            .select(&handle_selector_error!(Selector::parse(
-                r#"div[class="numscore"]"#
-            )))
-            .next()
-        {
-            None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    r#"Can't find the div[class="numscore"] element"#,
-                ))
-            }
-            Some(d) => d,
-        };
-        RawKumaResult::Ok(handle_other_error!(BsxTitleDataBuilder::default()
-            .title(
-                match title.value().attr("title") {
-                    None => {
-                        return RawKumaResult::Io(std::io::Error::new(
-                            std::io::ErrorKind::NotFound,
-                            r#"Can't find the title attribute"#,
-                        ));
-                    }
-                    Some(d) => d,
-                }
-                .to_string(),
-            )
-            .rating(handle_other_error!(match rating.text().next() {
-                None => {
-                    return RawKumaResult::Io(std::io::Error::new(
-                        std::io::ErrorKind::NotFound,
-                        r#"Can't collect the text content"#,
-                    ));
-                }
-                Some(d) => d,
-            }
-            .parse::<f64>()))
-            .image(handle_other_error!(Url::parse(
-                format!(
-                    "https:{}",
-                    match image.value().attr("src") {
-                        None => {
-                            return RawKumaResult::Io(std::io::Error::new(
-                                std::io::ErrorKind::NotFound,
-                                r#"Can't find the src attribute"#,
-                            ));
-                        }
-                        Some(d) => d,
-                    }
-                )
-                .as_str()
-            )))
-            .url(handle_other_error!(Url::parse(
-                (match title.value().attr("href") {
-                    None => {
-                        return RawKumaResult::Io(std::io::Error::new(
-                            std::io::ErrorKind::NotFound,
-                            r#"Can't find the href attribute"#,
-                        ));
-                    }
-                    Some(d) => d,
-                })
-                .to_string()
-                .as_str()
-            )))
-            .build()))
+        let title = Self::get_title_data(&data)?;
+
+        RawKumaResult::Ok(
+            BsxTitleDataBuilder::default()
+                .title(title.title)
+                .rating(Self::get_rating(&data)?)
+                .image(Self::get_img_url(&data)?)
+                .url(title.url)
+                .build()?,
+        )
     }
 }
