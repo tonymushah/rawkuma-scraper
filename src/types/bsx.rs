@@ -73,7 +73,7 @@ impl BsxTitleData {
         }
     }
     pub fn get_title_data<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<TitleData> {
-        let _title = Self::get_title_element(&data)?;
+        let _title = Self::get_title_element(data)?;
         Ok(TitleData {
             title: _title
                 .value()
@@ -92,7 +92,7 @@ impl BsxTitleData {
         })
     }
     pub fn get_img_url<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<Url> {
-        let image = Self::get_image_element(&data)?;
+        let image = Self::get_image_element(data)?;
         Ok(Url::parse(
             format!(
                 "https:{}",
@@ -108,7 +108,7 @@ impl BsxTitleData {
         )?)
     }
     pub fn get_rating<'a>(data: &'a ElementRef<'a>) -> RawKumaResult<f64> {
-        let rating = Self::get_rating_element(&data)?;
+        let rating = Self::get_rating_element(data)?;
         Ok(rating
             .text()
             .next()
@@ -119,13 +119,13 @@ impl BsxTitleData {
 
 impl<'a> FromElementRef<'a> for BsxTitleData {
     fn from_element_ref(data: &'a ElementRef<'a>) -> RawKumaResult<Self> {
-        let title = Self::get_title_data(&data)?;
+        let title = Self::get_title_data(data)?;
 
         RawKumaResult::Ok(
             BsxTitleDataBuilder::default()
                 .title(title.title)
-                .rating(Self::get_rating(&data)?)
-                .image(Self::get_img_url(&data)?)
+                .rating(Self::get_rating(data)?)
+                .image(Self::get_img_url(data)?)
                 .url(title.url)
                 .build()?,
         )

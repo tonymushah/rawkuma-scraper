@@ -38,6 +38,6 @@ impl Iterator for RawKumaChapterData {
     type Item = ReaderAreaImage;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.reader_area.images.iter().next().cloned()
+        self.reader_area.images.first().cloned()
     }
 }

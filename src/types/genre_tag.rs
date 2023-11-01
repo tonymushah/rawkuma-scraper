@@ -36,7 +36,7 @@ impl<'a> MgenTag {
     pub fn get_tag_elements(data: &'a ElementRef<'a>) -> RawKumaResult<Vec<ElementRef<'a>>> {
         let selector = Self::get_tag_selector()?;
         let elements: Vec<ElementRef<'a>> =
-            Self::get_mgen_element(&data)?.select(&selector).collect();
+            Self::get_mgen_element(data)?.select(&selector).collect();
         RawKumaResult::Ok(elements)
     }
     pub fn get_tags_elements_data(data: &'a ElementRef<'a>) -> RawKumaResult<Vec<Self>> {

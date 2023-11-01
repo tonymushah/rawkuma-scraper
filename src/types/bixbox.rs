@@ -332,21 +332,21 @@ impl<'a> FromElementRef<'a> for BixboxData {
     where
         Self: Sized,
     {
-        let (image, title) = Self::get_image_element_data(&data)?;
+        let (image, title) = Self::get_image_element_data(data)?;
         RawKumaResult::Ok(
             BixboxDataBuilder::default()
                 .image(image)
                 .title(title)
-                .name(Self::get_name_element_data(&data)?)
-                .worst_rating(Self::get_worst_rating_element_data(&data)?)
-                .best_rating(Self::get_best_rating_element_data(&data)?)
-                .rating_count(Self::get_rating_count_element_data(&data)?)
-                .rating_value(Self::get_rating_value_element_data(&data)?)
-                .description(Self::get_description_element_data(&data)?)
-                .author(Self::get_author_element_data(&data)?)
-                .date_modified(Self::get_date_modified_element_data(&data)?)
-                .date_published(Self::get_date_published_element_data(&data)?)
-                .genres(MgenTag::get_tags_elements_data(&data)?)
+                .name(Self::get_name_element_data(data)?)
+                .worst_rating(Self::get_worst_rating_element_data(data)?)
+                .best_rating(Self::get_best_rating_element_data(data)?)
+                .rating_count(Self::get_rating_count_element_data(data)?)
+                .rating_value(Self::get_rating_value_element_data(data)?)
+                .description(Self::get_description_element_data(data)?)
+                .author(Self::get_author_element_data(data)?)
+                .date_modified(Self::get_date_modified_element_data(data)?)
+                .date_published(Self::get_date_published_element_data(data)?)
+                .genres(MgenTag::get_tags_elements_data(data)?)
                 .build()?,
         )
     }

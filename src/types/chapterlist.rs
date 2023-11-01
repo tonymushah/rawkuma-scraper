@@ -44,7 +44,7 @@ impl<'a> FromElementRef<'a> for ChapterList {
         RawKumaResult::Ok(
             ChapterListBuilder::default()
                 .chapters(Chapter::from_vec_element(&Self::get_chapters_elements(
-                    &data,
+                    data,
                 )?)?)
                 .build()?,
         )
@@ -188,11 +188,11 @@ impl<'a> FromElementRef<'a> for Chapter {
     {
         RawKumaResult::Ok(
             ChapterBuilder::default()
-                .chapter_date(Self::get_chapterdate_data(&data)?)
-                .chapter_num(Self::get_chapternum_data(&data)?)
-                .download_link(Self::get_dload_data(&data)?)
-                .num(Self::get_data_num(&data)?)
-                .url(Self::get_a_ephnum_data(&data)?)
+                .chapter_date(Self::get_chapterdate_data(data)?)
+                .chapter_num(Self::get_chapternum_data(data)?)
+                .download_link(Self::get_dload_data(data)?)
+                .num(Self::get_data_num(data)?)
+                .url(Self::get_a_ephnum_data(data)?)
                 .build()?,
         )
     }

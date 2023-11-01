@@ -18,7 +18,7 @@ pub fn get_content_selector() -> RawKumaResult<Selector> {
     RawKumaResult::Ok(Selector::parse("div#content")?)
 }
 
-pub fn get_content_element<'a>(html: &'a Html) -> RawKumaResult<ElementRef<'a>> {
+pub fn get_content_element(html: &Html) -> RawKumaResult<ElementRef<'_>> {
     let selector = get_content_selector()?;
     match html.select(&selector).next() {
         None => RawKumaResult::Err(crate::types::error::Error::ElementNotFound(String::from(

@@ -25,10 +25,10 @@ impl<'a> ReaderArea {
     }
     pub fn get_reader_area_element(data: &'a ElementRef) -> RawKumaResult<ElementRef<'a>> {
         let selector = Self::get_reader_area_selector()?;
-        Ok(data
+        data
             .select(&selector)
             .next()
-            .ok_or(Error::ElementNotFound("#readerarea".to_string()))?)
+            .ok_or(Error::ElementNotFound("#readerarea".to_string()))
     }
     pub fn get_noscript_selector() -> RawKumaResult<Selector> {
         Ok(Selector::parse("noscript")?)

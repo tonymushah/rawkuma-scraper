@@ -81,7 +81,7 @@ impl<'a> UtaoTitleData {
             .select(&(Self::div_imagu_selector()?))
             .next()
             .ok_or(Error::ElementNotFound("a".to_string()))?;
-        return RawKumaResult::Ok(divs);
+        RawKumaResult::Ok(divs)
     }
 
     pub fn get_img_selector() -> RawKumaResult<Selector> {
@@ -89,10 +89,10 @@ impl<'a> UtaoTitleData {
     }
 
     pub fn get_image_element(imgu: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        Ok(imgu
+        imgu
             .select(&(Self::get_img_selector()?))
             .next()
-            .ok_or(Error::ElementNotFound("img".to_string()))?)
+            .ok_or(Error::ElementNotFound("img".to_string()))
     }
 
     pub fn get_a_series_selector() -> RawKumaResult<Selector> {
