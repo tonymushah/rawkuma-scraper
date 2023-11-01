@@ -134,20 +134,20 @@ impl<'a> Chapter {
 
     pub fn get_a_ephnum_data(data: &'a ElementRef<'a>) -> RawKumaResult<Url> {
         let a_ephnum = Self::get_a_ephnum_element(data)?;
-        match a_ephnum.value().attr("href").ok_or() {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "href attribute not found in a > .eph-num element",
-            )),
-            Some(href) => RawKumaResult::Ok(handle_other_error!(Url::parse(href))),
-        }
+        Ok(Url::parse(a_ephnum.value().attr("href").ok_or(
+            super::error::Error::AttributeNotFound {
+                name: "href".to_string(),
+                element: "a > .eph-num".to_string(),
+            },
+        )?)?)
     }
     pub fn get_chapternum_data(data: &'a ElementRef<'a>) -> RawKumaResult<String> {
-        let chapternum = handle_rawkuma_result!(Self::get_chapternum_element(data));
-        match chapternum.text().next() {
-            None => RawKumaResult::Ok(String::new()),
-            Some(d) => RawKumaResult::Ok(d.to_string()),
-        }
+        let chapternum = Self::get_chapternum_element(data)?;
+        Ok(chapternum
+            .text()
+            .next()
+            .map(|d| d.to_string())
+            .unwrap_or(String::new()))
     }
     pub fn get_chapterdate_data(data: &'a ElementRef<'a>) -> RawKumaResult<String> {
         let chapterdate = handle_rawkuma_result!(Self::get_chapterdate_element(data));
