@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use derive_builder::Builder;
 use scraper::{ElementRef, Html, Selector};
 
-use crate::types::{BsxTitleData, FromElementRef, RawKumaResult, UtaoTitleData};
+use crate::types::{error::Error, BsxTitleData, FromElementRef, RawKumaResult, UtaoTitleData};
 
 use super::HtmlParser;
 
@@ -137,7 +137,8 @@ impl<'a> RawKumaHomeParser<'a> {
                     element: a.clone(),
                 })?
                 .to_string();
-            let selector_ = std::convert::TryInto::<Selector>::try_into("")?;
+            let selector_ = std::convert::TryInto::<Selector>::try_into(href.as_str())
+                .map_err(|e| Error::SelectorErrorKind(e.to_string()))?;
             let element = match html.select(&selector_).next() {
                 None => {
                     return RawKumaResult::Err(crate::types::error::Error::ElementNotFound(

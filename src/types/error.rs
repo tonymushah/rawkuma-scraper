@@ -32,6 +32,8 @@ pub enum Error {
     ParseFloatError(#[from] ParseFloatError),
     #[error(transparent)]
     ChronoParseError(#[from] chrono::ParseError),
+    #[error("{0}")]
+    SelectorErrorKind(String),
 }
 
 #[doc = "Error type for Rawkuma Error"]
