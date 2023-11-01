@@ -42,7 +42,7 @@ impl<'a> ReaderArea {
         let d = unescape(data.inner_html());
         let data = Html::parse_fragment(d.to_string().as_str());
         let images_elements = ReaderAreaImage::get_reader_area_images_element_from_html(&data)?;
-        let images: Vec<ReaderAreaImage> = ReaderAreaImage::from_vec_element(images_elements)?;
+        let images: Vec<ReaderAreaImage> = ReaderAreaImage::from_vec_element(&images_elements)?;
         Ok(images)
     }
 }
@@ -116,7 +116,8 @@ impl<'a> ReaderAreaImage {
                 name: "src".to_string(),
                 element: "img".to_string(),
             })
-            .map(|d| format!("http:{}", d).as_str())?
+            .map(|d| format!("http:{}", d))?
+            .as_str()
             .parse::<Url>()?)
     }
 }

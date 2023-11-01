@@ -43,7 +43,7 @@ impl<'a> FromElementRef<'a> for ChapterList {
     {
         RawKumaResult::Ok(
             ChapterListBuilder::default()
-                .chapters(Chapter::from_vec_element(Self::get_chapters_elements(
+                .chapters(Chapter::from_vec_element(&Self::get_chapters_elements(
                     &data,
                 )?)?)
                 .build()?,

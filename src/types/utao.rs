@@ -134,7 +134,7 @@ impl<'a> FromElementRef<'a> for UtaoTitleData {
         let chapters: Vec<ElementRef> = Self::get_chapters_elements(data)?;
         RawKumaResult::Ok(
             UtaoTitleDataBuilder::default()
-                .chapters(UtaoTitleChapter::from_vec_element(chapters)?)
+                .chapters(UtaoTitleChapter::from_vec_element(&chapters)?)
                 .image(
                     format!(
                         "https:{}",

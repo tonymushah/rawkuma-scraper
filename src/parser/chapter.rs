@@ -25,7 +25,7 @@ impl<'a> RawKumaChapterParser<'a> {
     }
     pub fn get_related_manga(&self) -> RawKumaResult<Vec<BsxTitleData>> {
         let bsx_elements = BsxTitleData::get_bsx_elements(&self.content)?;
-        BsxTitleData::from_vec_element(bsx_elements)
+        BsxTitleData::from_vec_element(&bsx_elements)
     }
     pub fn get_entry_title(&self) -> RawKumaResult<String> {
         let h1_selector = Selector::parse("h1")?;

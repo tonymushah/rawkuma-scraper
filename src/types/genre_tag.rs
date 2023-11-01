@@ -41,7 +41,7 @@ impl<'a> MgenTag {
     }
     pub fn get_tags_elements_data(data: &'a ElementRef<'a>) -> RawKumaResult<Vec<Self>> {
         let elements = Self::get_tag_elements(data)?;
-        Self::from_vec_element(elements)
+        Self::from_vec_element(&elements)
     }
 }
 

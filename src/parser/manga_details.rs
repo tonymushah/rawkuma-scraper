@@ -44,6 +44,6 @@ impl<'a> RawKumaMangaDetailParser<'a> {
             .content
             .select(&(BsxTitleData::div_bsx_selector()?))
             .collect();
-        BsxTitleData::from_vec_element(bsx_elements)
+        BsxTitleData::from_vec_element(&bsx_elements)
     }
 }
