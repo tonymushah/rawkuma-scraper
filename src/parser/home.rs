@@ -175,7 +175,7 @@ impl<'a> RawKumaHomeParser<'a> {
                 _ => {}
             }
             */
-            result.push(BsxTitleData::from_element_ref(*element).unwrap())
+            result.push(BsxTitleData::from_element_ref(element).unwrap())
         }
         result
     }
@@ -196,7 +196,7 @@ impl<'a> RawKumaHomeParser<'a> {
     pub fn get_latest(&self) -> Vec<UtaoTitleData> {
         let mut result: Vec<UtaoTitleData> = Vec::new();
         for element in &self.utao_elements {
-            if let RawKumaResult::Ok(d) = UtaoTitleData::from_element_ref(*element) {
+            if let RawKumaResult::Ok(d) = UtaoTitleData::from_element_ref(element) {
                 result.push(d);
             }
         }

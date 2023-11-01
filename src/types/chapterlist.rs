@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "getset")]
 use getset::Getters;
 
-use super::{FromElementRef, RawKumaResult};
+use super::{error, FromElementRef, RawKumaResult};
 
 #[derive(Builder, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -37,7 +37,7 @@ impl<'a> ChapterList {
 }
 
 impl<'a> FromElementRef<'a> for ChapterList {
-    fn from_element_ref(data: ElementRef<'a>) -> RawKumaResult<Self>
+    fn from_element_ref(data: &'a ElementRef<'a>) -> RawKumaResult<Self>
     where
         Self: Sized,
     {
@@ -54,6 +54,7 @@ impl<'a> FromElementRef<'a> for ChapterList {
 #[derive(Builder, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
+#[builder(build_fn(error = "crate::types::error::BuilderError"))]
 pub struct Chapter {
     #[cfg_attr(feature = "specta", specta(type = String))]
     pub url: Url,
@@ -150,44 +151,49 @@ impl<'a> Chapter {
             .unwrap_or(String::new()))
     }
     pub fn get_chapterdate_data(data: &'a ElementRef<'a>) -> RawKumaResult<String> {
-        let chapterdate = handle_rawkuma_result!(Self::get_chapterdate_element(data));
-        match chapterdate.text().next() {
-            None => RawKumaResult::Ok(String::new()),
-            Some(d) => RawKumaResult::Ok(d.to_string()),
-        }
+        let chapterdate = Self::get_chapterdate_element(data)?;
+        Ok(chapterdate
+            .text()
+            .next()
+            .map(|d| d.to_string())
+            .unwrap_or(String::new()))
     }
     pub fn get_data_num(data: &'a ElementRef<'a>) -> RawKumaResult<f32> {
-        match data.value().attr("data-num") {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                format!("data-num attribute not found in {}", data.html()),
-            )),
-            Some(d) => RawKumaResult::Ok(handle_other_error!(d.parse::<f32>())),
-        }
+        Ok(data
+            .value()
+            .attr("data-num")
+            .ok_or(error::Error::AttributeNotFound {
+                name: "data-num".to_string(),
+                element: data.html(),
+            })?
+            .parse::<f32>()?)
     }
     pub fn get_dload_data(data: &'a ElementRef<'a>) -> RawKumaResult<Url> {
-        let element = handle_rawkuma_result!(Self::get_dload_element(data));
-        match element.value().attr("href") {
-            None => RawKumaResult::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "href attribute not found in a.dload element",
-            )),
-            Some(href) => RawKumaResult::Ok(handle_other_error!(Url::parse(href))),
-        }
+        let element = Self::get_dload_element(data)?;
+        Ok(element
+            .value()
+            .attr("href")
+            .ok_or(error::Error::AttributeNotFound {
+                name: "href".to_string(),
+                element: "a.dload".to_string(),
+            })?
+            .parse::<Url>()?)
     }
 }
 
 impl<'a> FromElementRef<'a> for Chapter {
-    fn from_element_ref(data: ElementRef<'a>) -> RawKumaResult<Self>
+    fn from_element_ref(data: &'a ElementRef<'a>) -> RawKumaResult<Self>
     where
         Self: Sized,
     {
-        RawKumaResult::Ok(handle_other_error!(ChapterBuilder::default()
-            .chapter_date(handle_rawkuma_result!(Self::get_chapterdate_data(&data)))
-            .chapter_num(handle_rawkuma_result!(Self::get_chapternum_data(&data)))
-            .download_link(handle_rawkuma_result!(Self::get_dload_data(&data)))
-            .num(handle_rawkuma_result!(Self::get_data_num(&data)))
-            .url(handle_rawkuma_result!(Self::get_a_ephnum_data(&data)))
-            .build()))
+        RawKumaResult::Ok(
+            ChapterBuilder::default()
+                .chapter_date(Self::get_chapterdate_data(&data)?)
+                .chapter_num(Self::get_chapternum_data(&data)?)
+                .download_link(Self::get_dload_data(&data)?)
+                .num(Self::get_data_num(&data)?)
+                .url(Self::get_a_ephnum_data(&data)?)
+                .build()?,
+        )
     }
 }

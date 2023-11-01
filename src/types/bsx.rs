@@ -117,8 +117,8 @@ impl BsxTitleData {
     }
 }
 
-impl FromElementRef<'_> for BsxTitleData {
-    fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self> {
+impl<'a> FromElementRef<'a> for BsxTitleData {
+    fn from_element_ref(data: &'a ElementRef<'a>) -> RawKumaResult<Self> {
         let title = Self::get_title_data(&data)?;
 
         RawKumaResult::Ok(

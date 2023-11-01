@@ -327,8 +327,8 @@ impl BixboxData {
     }
 }
 
-impl FromElementRef<'_> for BixboxData {
-    fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self>
+impl<'a> FromElementRef<'a> for BixboxData {
+    fn from_element_ref(data: &'a ElementRef<'a>) -> RawKumaResult<Self>
     where
         Self: Sized,
     {

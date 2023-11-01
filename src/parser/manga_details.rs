@@ -33,11 +33,11 @@ impl<'a> RawKumaMangaDetailParser<'a> {
             }
             Some(d) => d,
         };
-        BixboxData::from_element_ref(bixbox)
+        BixboxData::from_element_ref(&bixbox)
     }
     pub fn get_chapter_list(&self) -> RawKumaResult<ChapterList> {
         let chapter_list = ChapterList::get_chapter_list_element(&self.content)?;
-        ChapterList::from_element_ref(chapter_list)
+        ChapterList::from_element_ref(&chapter_list)
     }
     pub fn get_related_series(&self) -> RawKumaResult<Vec<BsxTitleData>> {
         let bsx_elements: Vec<ElementRef<'a>> = self

@@ -10,44 +10,32 @@ pub mod reader_area;
 pub mod search;
 pub mod utao;
 
-pub use bixbox::{BixboxData, BixboxDataBuilder, BixboxDataBuilderError};
-pub use bsx::{BsxTitleData, BsxTitleDataBuilder, BsxTitleDataBuilderError};
-pub use chapterlist::{
-    Chapter, ChapterBuilder, ChapterBuilderError, ChapterList, ChapterListBuilder,
-    ChapterListBuilderError,
-};
+pub use bixbox::{BixboxData, BixboxDataBuilder};
+pub use bsx::{BsxTitleData, BsxTitleDataBuilder};
+pub use chapterlist::{Chapter, ChapterBuilder, ChapterList, ChapterListBuilder};
 pub use error::RawKumaResult;
-pub use genre_tag::{MgenTag, MgenTagBuilder, MgenTagBuilderError};
-pub use reader_area::{
-    ReaderArea, ReaderAreaBuilder, ReaderAreaBuilderError, ReaderAreaImage, ReaderAreaImageBuilder,
-    ReaderAreaImageBuilderError,
-};
+pub use genre_tag::{MgenTag, MgenTagBuilder};
+pub use reader_area::{ReaderArea, ReaderAreaBuilder, ReaderAreaImage, ReaderAreaImageBuilder};
 use scraper::ElementRef;
-pub use utao::{
-    UtaoTitleChapter, UtaoTitleChapterBuilder, UtaoTitleChapterBuilderError, UtaoTitleData,
-    UtaoTitleDataBuilder, UtaoTitleDataBuilderError,
-};
+pub use utao::{UtaoTitleChapter, UtaoTitleChapterBuilder, UtaoTitleData, UtaoTitleDataBuilder};
 
 use crate::parser::HtmlParser;
 
 pub trait FromElementRef<'a> {
-    fn from_element_ref(data: ElementRef<'a>) -> RawKumaResult<Self>
+    fn from_element_ref(data: &'a ElementRef<'a>) -> RawKumaResult<Self>
     where
         Self: Sized;
-    fn from_vec_element(elements: Vec<ElementRef<'a>>) -> RawKumaResult<Vec<Self>>
+    fn from_vec_element(elements: &'a Vec<ElementRef<'a>>) -> RawKumaResult<Vec<Self>>
     where
         Self: Sized,
     {
         let mut datas: Vec<Self> = Vec::new();
         for element in elements {
-            match Self::from_element_ref(element) {
-                RawKumaResult::Ok(d) => {
-                    datas.push(d);
-                }
-                _ => {}
+            if let Ok(d) = Self::from_element_ref(element) {
+                datas.push(d);
             }
         }
-        RawKumaResult::Ok(datas)
+        Ok(datas)
     }
 }
 
