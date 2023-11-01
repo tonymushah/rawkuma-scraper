@@ -1,5 +1,5 @@
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
@@ -10,11 +10,11 @@ pub enum Type {
     Manhwa,
     Manhua,
     Comic,
-    Novel
+    Novel,
 }
 
 impl<'a> Type {
-    pub fn as_str(&self) -> &'a str{
+    pub fn as_str(&self) -> &'a str {
         match self {
             Type::All => "",
             Type::Manga => "manga",
@@ -26,13 +26,13 @@ impl<'a> Type {
     }
 }
 
-impl<'a> AsRef<str> for Type{
+impl<'a> AsRef<str> for Type {
     fn as_ref(&self) -> &str {
         self.as_str()
     }
 }
 
-impl<'a> From<&'a str> for Type{
+impl<'a> From<&'a str> for Type {
     fn from(value: &'a str) -> Self {
         match value {
             "manga" => Type::Manga,
@@ -40,7 +40,7 @@ impl<'a> From<&'a str> for Type{
             "manhua" => Type::Manhua,
             "comic" => Type::Comic,
             "novel" => Type::Novel,
-            _ => Default::default()
+            _ => Default::default(),
         }
     }
 }

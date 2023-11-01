@@ -1,5 +1,5 @@
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
@@ -8,11 +8,11 @@ pub enum Status {
     All,
     Ongoing,
     Completed,
-    Hiatus
+    Hiatus,
 }
 
 impl Status {
-    pub fn as_str<'a>(&self) -> &'a str{
+    pub fn as_str<'a>(&self) -> &'a str {
         match self {
             Status::All => "",
             Status::Ongoing => "ongoing",
@@ -22,7 +22,7 @@ impl Status {
     }
 }
 
-impl<'a> AsRef<str> for Status{
+impl<'a> AsRef<str> for Status {
     fn as_ref(&self) -> &str {
         self.as_str()
     }
@@ -34,7 +34,7 @@ impl<'a> From<&'a str> for Status {
             "ongoing" => Self::Ongoing,
             "completed" => Self::Completed,
             "hiatus" => Self::Hiatus,
-            _ => Self::All
+            _ => Self::All,
         }
     }
 }

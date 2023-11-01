@@ -60,7 +60,7 @@ pub enum Genre {
     Updating,
     War,
     Yaoi,
-    Yuri
+    Yuri,
 }
 impl<'a> Genre {
     pub fn as_str(&self) -> &'a str {
@@ -111,7 +111,7 @@ impl<'a> Genre {
             Genre::Updating => "updating",
             Genre::War => "war",
             Genre::Yaoi => "yaoi",
-            Genre::Yuri => "yuri"
+            Genre::Yuri => "yuri",
         }
     }
 }

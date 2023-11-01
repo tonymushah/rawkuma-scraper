@@ -1,1 +1,1 @@
-pub const BASE_URL : &str = "https://rawkuma.com";
+pub const BASE_URL: &str = "https://rawkuma.com";

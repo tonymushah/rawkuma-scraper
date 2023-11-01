@@ -25,8 +25,7 @@ impl<'a> ReaderArea {
     }
     pub fn get_reader_area_element(data: &'a ElementRef) -> RawKumaResult<ElementRef<'a>> {
         let selector = Self::get_reader_area_selector()?;
-        data
-            .select(&selector)
+        data.select(&selector)
             .next()
             .ok_or(Error::ElementNotFound("#readerarea".to_string()))
     }

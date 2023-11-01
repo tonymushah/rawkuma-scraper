@@ -89,8 +89,7 @@ impl<'a> UtaoTitleData {
     }
 
     pub fn get_image_element(imgu: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        imgu
-            .select(&(Self::get_img_selector()?))
+        imgu.select(&(Self::get_img_selector()?))
             .next()
             .ok_or(Error::ElementNotFound("img".to_string()))
     }
