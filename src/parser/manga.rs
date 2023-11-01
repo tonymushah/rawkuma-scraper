@@ -1,7 +1,7 @@
 use scraper::ElementRef;
 
 use super::{get_content_element, HtmlParser};
-use crate::types::{BixboxData, BsxTitleData, ChapterList, FromElementRef, RawKumaResult};
+use crate::types::RawKumaResult;
 
 #[derive(Clone)]
 pub struct RawKumaMangaDetailParser<'a> {

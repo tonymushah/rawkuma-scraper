@@ -21,6 +21,6 @@ impl<'a> HtmlParser<'a> for RawKumaSearchParser<'a> {
 impl<'a> RawKumaSearchParser<'a> {
     pub fn get_bsx_results(&'a self) -> RawKumaResult<Vec<BsxTitleData>> {
         let elements: Vec<ElementRef<'a>> = BsxTitleData::get_bsx_elements(&self.content)?;
-        RawKumaResult::Ok(BsxTitleData::from_vec_element(elements)?)
+        BsxTitleData::from_vec_element(&elements)
     }
 }

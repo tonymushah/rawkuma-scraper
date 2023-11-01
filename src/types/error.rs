@@ -1,4 +1,7 @@
-use std::{fmt::Display, num::ParseIntError};
+use std::{
+    fmt::Display,
+    num::{ParseFloatError, ParseIntError},
+};
 
 use derive_builder::UninitializedFieldError;
 use thiserror::Error;
@@ -13,6 +16,8 @@ pub enum Error {
     Io(#[from] std::io::Error),
     #[error("Element '{0}' not found on the page")]
     ElementNotFound(String),
+    #[error("Element {} not found on {}", element, parent)]
+    ElementNotFoundInNested { element: String, parent: String },
     #[error("Attribute '{}' not found on the element {}", name, element)]
     AttributeNotFound { name: String, element: String },
     #[error(transparent)]
@@ -23,6 +28,12 @@ pub enum Error {
     TextContentFound,
     #[error(transparent)]
     ParseIntError(#[from] ParseIntError),
+    #[error(transparent)]
+    ParseFloatError(#[from] ParseFloatError),
+    #[error(transparent)]
+    ChronoParseError(#[from] chrono::ParseError),
+    #[error("{0}")]
+    SelectorErrorKind(String),
 }
 
 #[doc = "Error type for Rawkuma Error"]

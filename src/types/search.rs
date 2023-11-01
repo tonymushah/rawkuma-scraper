@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "getset")]
 use getset::Getters;
 
-use crate::{handle_other_error, handle_rawkuma_result, parser::search::RawKumaSearchParser};
+use crate::parser::search::RawKumaSearchParser;
 
 use super::{BsxTitleData, FromHtmlParser, RawKumaResult};
 
@@ -23,8 +23,10 @@ impl<'a> FromHtmlParser<'a, RawKumaSearchParser<'a>> for RawKumaSearch {
     where
         Self: Sized,
     {
-        RawKumaResult::Ok(handle_other_error!(RawKumaSearchBuilder::default()
-            .result(handle_rawkuma_result!(parser.get_bsx_results()))
-            .build()))
+        RawKumaResult::Ok(
+            RawKumaSearchBuilder::default()
+                .result(parser.get_bsx_results()?)
+                .build()?,
+        )
     }
 }

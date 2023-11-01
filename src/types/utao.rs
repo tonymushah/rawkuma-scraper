@@ -7,9 +7,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "getset")]
 use getset::Getters;
 
-use crate::{handle_other_error, handle_rawkuma_result, handle_selector_error};
-
-use super::{FromElementRef, RawKumaResult};
+use super::{error::Error, FromElementRef, RawKumaResult};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "getset", derive(Getters))]
@@ -22,48 +20,48 @@ pub struct UtaoTitleChapter {
     pub text: String,
 }
 
-impl FromElementRef<'_> for UtaoTitleChapter {
-    fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self> {
-        let title = match data
-            .select(&handle_selector_error!(Selector::parse(r#"a"#)))
+impl<'a> UtaoTitleChapter {
+    pub fn get_a_selector() -> RawKumaResult<Selector> {
+        Ok(Selector::parse(r#"a"#)?)
+    }
+    pub fn get_title_selector(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
+        data.select(&(Self::get_a_selector()?))
             .next()
-        {
-            None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "Can't find the a element",
-                ))
-            }
-            Some(d) => d,
-        };
-        RawKumaResult::Ok(handle_other_error!(UtaoTitleChapterBuilder::default()
-            .url(handle_other_error!(Url::parse(
-                match title.value().attr("href") {
-                    None => {
-                        return RawKumaResult::Io(std::io::Error::new(
-                            std::io::ErrorKind::NotFound,
-                            "Can't find href in the a element",
-                        ));
-                    }
-                    Some(d) => d,
-                }
-            )))
-            .text(match title.text().next() {
-                None => {
-                    return RawKumaResult::Io(std::io::Error::new(
-                        std::io::ErrorKind::NotFound,
-                        "Can't find text in the element",
-                    ));
-                }
-                Some(d) => d.to_string(),
-            })
-            .build()))
+            .ok_or(Error::ElementNotFound("a".to_string()))
+    }
+}
+
+impl<'a> FromElementRef<'a> for UtaoTitleChapter {
+    fn from_element_ref(data: &'a ElementRef<'a>) -> RawKumaResult<Self> {
+        let title = Self::get_title_selector(data)?;
+        RawKumaResult::Ok(
+            UtaoTitleChapterBuilder::default()
+                .url(
+                    title
+                        .value()
+                        .attr("href")
+                        .ok_or(Error::AttributeNotFound {
+                            name: "href".to_string(),
+                            element: "a".to_string(),
+                        })?
+                        .parse::<Url>()?,
+                )
+                .text(
+                    title
+                        .text()
+                        .next()
+                        .ok_or(Error::TextContentFound)?
+                        .to_string(),
+                )
+                .build()?,
+        )
     }
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Builder, Clone)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
+#[builder(build_fn(error = "crate::types::error::BuilderError"))]
 pub struct UtaoTitleData {
     pub title: String,
     #[cfg_attr(feature = "specta", specta(type = String))]
@@ -75,119 +73,95 @@ pub struct UtaoTitleData {
 
 impl<'a> UtaoTitleData {
     pub fn div_imagu_selector() -> RawKumaResult<Selector> {
-        RawKumaResult::Ok(handle_selector_error!(Selector::parse(
-            r#"div[class="imgu"]"#
-        )))
+        RawKumaResult::Ok(Selector::parse(r#"div[class="imgu"]"#)?)
     }
 
-    pub fn get_imgu_div(html: ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
-        let divs: ElementRef = match html
-            .select(&handle_rawkuma_result!(Self::div_imagu_selector()))
+    pub fn get_imgu_div(html: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
+        let divs: ElementRef = html
+            .select(&(Self::div_imagu_selector()?))
             .next()
-        {
-            None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "Can't find the a element",
-                ))
-            }
-            Some(d) => d,
-        };
-        return RawKumaResult::Ok(divs);
+            .ok_or(Error::ElementNotFound("a".to_string()))?;
+        RawKumaResult::Ok(divs)
+    }
+
+    pub fn get_img_selector() -> RawKumaResult<Selector> {
+        Ok(Selector::parse("img")?)
+    }
+
+    pub fn get_image_element(imgu: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
+        imgu.select(&(Self::get_img_selector()?))
+            .next()
+            .ok_or(Error::ElementNotFound("img".to_string()))
+    }
+
+    pub fn get_a_series_selector() -> RawKumaResult<Selector> {
+        Ok(Selector::parse(r#"a[class="series"]"#)?)
+    }
+
+    pub fn get_a_series_element(imgu: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
+        imgu.select(&(Self::get_a_series_selector()?))
+            .next()
+            .ok_or(Error::ElementNotFound("a".to_string()))
+    }
+
+    pub fn get_ul_manga_selector() -> RawKumaResult<Selector> {
+        Ok(Selector::parse(r#"ul[class="Manga"]"#)?)
+    }
+
+    pub fn get_ul_manga_element(data: &'a ElementRef<'a>) -> RawKumaResult<ElementRef<'a>> {
+        data.select(&(Self::get_ul_manga_selector()?))
+            .next()
+            .ok_or(Error::ElementNotFound(r#"ul[class="Manga"]"#.to_string()))
+    }
+
+    pub fn get_li_selector() -> RawKumaResult<Selector> {
+        Ok(Selector::parse("li")?)
+    }
+
+    pub fn get_chapters_elements(data: &'a ElementRef<'a>) -> RawKumaResult<Vec<ElementRef<'a>>> {
+        Ok(Self::get_ul_manga_element(data)?
+            .select(&(Self::get_li_selector()?))
+            .collect())
     }
 }
 
-impl FromElementRef<'_> for UtaoTitleData {
-    fn from_element_ref(data: ElementRef<'_>) -> RawKumaResult<Self> {
-        let imgu = handle_rawkuma_result!(Self::get_imgu_div(data));
-        let image = match imgu
-            .select(&handle_selector_error!(Selector::parse("img")))
-            .next()
-        {
-            None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "Can't find the img element",
-                ))
-            }
-            Some(d) => d,
-        };
-        let title = match imgu
-            .select(&handle_selector_error!(Selector::parse(
-                r#"a[class="series"]"#
-            )))
-            .next()
-        {
-            None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "Can't find the a element",
-                ))
-            }
-            Some(d) => d,
-        };
-        let chapters: Vec<ElementRef> = match data
-            .select(&handle_selector_error!(Selector::parse(
-                r#"ul[class="Manga"]"#
-            )))
-            .next()
-        {
-            None => {
-                return RawKumaResult::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    r#"Can't find the ul[class="Manga"] element"#,
-                ))
-            }
-            Some(d) => d
-                .select(&handle_selector_error!(Selector::parse("li")))
-                .collect(),
-        };
-        RawKumaResult::Ok(handle_other_error!(UtaoTitleDataBuilder::default()
-            .chapters(handle_rawkuma_result!(UtaoTitleChapter::from_vec_element(
-                chapters
-            )))
-            .image(handle_other_error!(Url::parse(
-                format!(
-                    "https:{}",
-                    match image.value().attr("src") {
-                        None => {
-                            return RawKumaResult::Io(std::io::Error::new(
-                                std::io::ErrorKind::NotFound,
-                                r#"Can't find the src attribute"#,
-                            ));
-                        }
-                        Some(d) => d,
-                    }
+impl<'a> FromElementRef<'a> for UtaoTitleData {
+    fn from_element_ref(data: &'a ElementRef<'a>) -> RawKumaResult<Self> {
+        let imgu = Self::get_imgu_div(data)?;
+        let image = Self::get_image_element(&imgu)?;
+        let title = Self::get_a_series_element(&imgu)?;
+        let chapters: Vec<ElementRef> = Self::get_chapters_elements(data)?;
+        RawKumaResult::Ok(
+            UtaoTitleDataBuilder::default()
+                .chapters(UtaoTitleChapter::from_vec_element(&chapters)?)
+                .image(
+                    format!(
+                        "https:{}",
+                        image.value().attr("src").ok_or(Error::AttributeNotFound {
+                            name: "src".to_string(),
+                            element: "image".to_string()
+                        })?
+                    )
+                    .as_str()
+                    .parse::<Url>()?,
                 )
-                .as_str()
-            )))
-            .url(handle_other_error!(Url::parse(
-                format!(
-                    "{}",
-                    match title.value().attr("href") {
-                        None => {
-                            return RawKumaResult::Io(std::io::Error::new(
-                                std::io::ErrorKind::NotFound,
-                                r#"Can't find the href attribute"#,
-                            ));
-                        }
-                        Some(d) => d,
-                    }
+                .url(
+                    title
+                        .value()
+                        .attr("href")
+                        .ok_or(Error::AttributeNotFound {
+                            name: "href".to_string(),
+                            element: "a".to_string(),
+                        })?
+                        .parse::<Url>()?,
                 )
-                .as_str()
-            )))
-            .title(
-                match title.value().attr("title") {
-                    None => {
-                        return RawKumaResult::Io(std::io::Error::new(
-                            std::io::ErrorKind::NotFound,
-                            r#"Can't find the title attribute"#,
-                        ));
-                    }
-                    Some(d) => d,
-                }
-                .to_string(),
-            )
-            .build()))
+                .title(title.value().attr("title").map(|d| d.to_string()).ok_or(
+                    Error::AttributeNotFound {
+                        name: "title".to_string(),
+                        element: r#"a[class="series"]"#.to_string(),
+                    },
+                )?)
+                .build()?,
+        )
     }
 }

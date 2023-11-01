@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use derive_builder::Builder;
 use scraper::{ElementRef, Html, Selector};
 
-use crate::types::{BsxTitleData, FromElementRef, RawKumaResult, UtaoTitleData};
+use crate::types::{error::Error, BsxTitleData, FromElementRef, RawKumaResult, UtaoTitleData};
 
 use super::HtmlParser;
 
@@ -122,22 +122,23 @@ impl<'a> RawKumaHomeParser<'a> {
     ) -> RawKumaResult<HashMap<String, ElementRef<'a>>> {
         let mut refs: HashMap<String, ElementRef<'a>> = HashMap::new();
         let a = "a".to_string();
-        let selector = Selector::parse(a.as_str())?;
+        let selector = Selector::parse("a")?;
         for theme in (Self::get_nav_serie_gen_divs(html)?).select(&selector) {
-            let text = match theme.text().next() {
-                None => return RawKumaResult::Err(crate::types::error::Error::ElementNotFound(a)),
-                Some(d) => d.to_string(),
-            };
-            let href = match theme.value().attr("href") {
-                None => {
-                    return RawKumaResult::Err(crate::types::error::Error::AttributeNotFound {
-                        name: "href".to_string(),
-                        element: a,
-                    })
-                }
-                Some(d) => d,
-            };
-            let selector_ = Selector::parse(href)?;
+            let text = theme
+                .text()
+                .next()
+                .map(|d| d.to_string())
+                .ok_or(crate::types::error::Error::ElementNotFound(a.clone()))?;
+            let href = theme
+                .value()
+                .attr("href")
+                .ok_or(crate::types::error::Error::AttributeNotFound {
+                    name: "href".to_string(),
+                    element: a.clone(),
+                })?
+                .to_string();
+            let selector_ = std::convert::TryInto::<Selector>::try_into(href.as_str())
+                .map_err(|e| Error::SelectorErrorKind(e.to_string()))?;
             let element = match html.select(&selector_).next() {
                 None => {
                     return RawKumaResult::Err(crate::types::error::Error::ElementNotFound(
@@ -175,7 +176,7 @@ impl<'a> RawKumaHomeParser<'a> {
                 _ => {}
             }
             */
-            result.push(BsxTitleData::from_element_ref(*element).unwrap())
+            result.push(BsxTitleData::from_element_ref(element).unwrap())
         }
         result
     }
@@ -183,11 +184,8 @@ impl<'a> RawKumaHomeParser<'a> {
     pub fn get_recommandation(&self) -> HashMap<String, Vec<BsxTitleData>> {
         let mut result: HashMap<String, Vec<BsxTitleData>> = HashMap::new();
         for (title, elements) in &self.recommandation {
-            match BsxTitleData::from_vec_element(elements.clone()) {
-                RawKumaResult::Ok(d) => {
-                    result.insert(title.clone(), d);
-                }
-                _ => {}
+            if let RawKumaResult::Ok(d) = BsxTitleData::from_vec_element(elements) {
+                result.insert(title.clone(), d);
             }
         }
         result
@@ -196,7 +194,7 @@ impl<'a> RawKumaHomeParser<'a> {
     pub fn get_latest(&self) -> Vec<UtaoTitleData> {
         let mut result: Vec<UtaoTitleData> = Vec::new();
         for element in &self.utao_elements {
-            if let RawKumaResult::Ok(d) = UtaoTitleData::from_element_ref(*element) {
+            if let RawKumaResult::Ok(d) = UtaoTitleData::from_element_ref(element) {
                 result.push(d);
             }
         }
