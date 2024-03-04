@@ -12,8 +12,8 @@ use super::{FromHtmlParser, ReaderArea};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
-#[builder(build_fn(error = "crate::types::error::BuilderError"))]
 #[derive(Clone, Builder, Default)]
+#[builder(build_fn(error = "crate::types::error::BuilderError"))]
 pub struct RawKumaChapterData {
     pub title: String,
     pub reader_area: ReaderArea,

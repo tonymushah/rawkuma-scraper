@@ -116,7 +116,7 @@ impl<'a> Genre {
     }
 }
 
-impl<'a> AsRef<str> for Genre {
+impl AsRef<str> for Genre {
     fn as_ref(&self) -> &str {
         self.as_str()
     }
@@ -176,7 +176,7 @@ impl<'a> From<&'a str> for Genre {
     }
 }
 
-impl<'a> Default for Genre {
+impl Default for Genre {
     fn default() -> Self {
         Self::All
     }

@@ -26,7 +26,7 @@ impl<'a> Type {
     }
 }
 
-impl<'a> AsRef<str> for Type {
+impl AsRef<str> for Type {
     fn as_ref(&self) -> &str {
         self.as_str()
     }

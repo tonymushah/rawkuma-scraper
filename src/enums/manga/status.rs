@@ -22,7 +22,7 @@ impl Status {
     }
 }
 
-impl<'a> AsRef<str> for Status {
+impl AsRef<str> for Status {
     fn as_ref(&self) -> &str {
         self.as_str()
     }

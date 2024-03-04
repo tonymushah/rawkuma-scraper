@@ -46,7 +46,7 @@ impl<'a> RawKumaHomeParser<'a> {
 
     pub fn get_div_bixbox_hothome(html: &'a Html) -> RawKumaResult<ElementRef<'a>> {
         let op: Vec<ElementRef> = html.select(&(Self::div_listupd_selector()?)).collect();
-        match op.get(0) {
+        match op.first() {
             None => RawKumaResult::Err(crate::types::error::Error::ElementNotFound(
                 "div[class='bixbox hothome']".to_string(),
             )),
