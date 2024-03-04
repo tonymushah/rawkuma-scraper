@@ -7,26 +7,34 @@ edition = "2021"
 
 [dependencies]
 reqwest = { version = "0.11", features = ["json"] }
-url = { version = "2" }
+url = { version = "2", features = ["serde"] }
 scraper = "0.19"
-tokio = { version = "1", features = ["rt", "sync", "rt-multi-thread", "macros"], optional = true}
+tokio = { version = "1", features = [
+    "rt",
+    "sync",
+    "rt-multi-thread",
+    "macros",
+], optional = true }
 derive_builder = "0.20"
-serde = { version = "1", features = ["derive"], optional = true}
-chrono = { version = "0.4", features = ["std"]}
+serde = { version = "1", features = ["derive"] }
+chrono = { version = "0.4", features = ["std", "serde"] }
 async-trait = "0.1"
 htmlize = { version = "1", features = ["unescape"] }
 specta = { version = "1", features = ["chrono"], optional = true }
 getset = { version = "0.1", optional = true }
 thiserror = "1.0"
+serde_json = "1.0"
 
 [dev-dependencies]
-serde_json = "1.0"
-tokio = { version = "1", features = ["rt", "sync", "rt-multi-thread", "macros"] }
+tokio = { version = "1", features = [
+    "rt",
+    "sync",
+    "rt-multi-thread",
+    "macros",
+] }
 jsonxf = "1.1.1"
-specta = { version = "1", features = ["export"]}
+specta = { version = "1", features = ["export"] }
 
 [features]
-default = ["specta"]
-serde = ["dep:serde", "url/serde", "chrono/serde"]
-specta = ["dep:specta", "serde"]
+specta = ["dep:specta"]
 getset = ["dep:getset"]

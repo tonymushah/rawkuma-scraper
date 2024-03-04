@@ -6,7 +6,6 @@ pub mod error;
 pub mod genre_tag;
 pub mod home;
 pub mod manga;
-pub mod reader_area;
 pub mod search;
 pub mod utao;
 
@@ -15,7 +14,6 @@ pub use bsx::{BsxTitleData, BsxTitleDataBuilder};
 pub use chapterlist::{Chapter, ChapterBuilder, ChapterList, ChapterListBuilder};
 pub use error::RawKumaResult;
 pub use genre_tag::{MgenTag, MgenTagBuilder};
-pub use reader_area::{ReaderArea, ReaderAreaBuilder, ReaderAreaImage, ReaderAreaImageBuilder};
 use scraper::ElementRef;
 pub use utao::{UtaoTitleChapter, UtaoTitleChapterBuilder, UtaoTitleData, UtaoTitleDataBuilder};
 

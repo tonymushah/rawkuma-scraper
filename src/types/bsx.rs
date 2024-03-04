@@ -1,7 +1,7 @@
 use derive_builder::Builder;
 use reqwest::{Client, Response, Url};
 use scraper::{ElementRef, Selector};
-#[cfg(feature = "serde")]
+
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
@@ -11,8 +11,7 @@ use crate::{client::RawKumaClientFromUrl, RawKumaClient};
 
 use super::{manga::RawKumaMangaDetailData, FromElementRef, RawKumaResult};
 
-#[derive(Builder, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Builder, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[builder(build_fn(error = "crate::types::error::BuilderError"))]

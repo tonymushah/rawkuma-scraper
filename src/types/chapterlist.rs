@@ -1,7 +1,7 @@
 use derive_builder::Builder;
 use reqwest::Url;
 use scraper::{ElementRef, Selector};
-#[cfg(feature = "serde")]
+
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
@@ -9,8 +9,7 @@ use getset::Getters;
 
 use super::{error, FromElementRef, RawKumaResult};
 
-#[derive(Builder, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Builder, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[builder(build_fn(error = "crate::types::error::BuilderError"))]
@@ -51,8 +50,7 @@ impl<'a> FromElementRef<'a> for ChapterList {
     }
 }
 
-#[derive(Builder, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Builder, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[builder(build_fn(error = "crate::types::error::BuilderError"))]
 pub struct Chapter {

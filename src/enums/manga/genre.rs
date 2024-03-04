@@ -1,7 +1,6 @@
-#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[derive(Clone)]
 pub enum Genre {

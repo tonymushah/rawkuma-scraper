@@ -1,7 +1,7 @@
 use derive_builder::Builder;
 use reqwest::Url;
 use scraper::{ElementRef, Selector};
-#[cfg(feature = "serde")]
+
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
@@ -9,7 +9,7 @@ use getset::Getters;
 
 use super::{error::Error, FromElementRef, RawKumaResult};
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[derive(Builder, Clone)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
@@ -58,8 +58,7 @@ impl<'a> FromElementRef<'a> for UtaoTitleChapter {
     }
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Builder, Clone)]
+#[derive(Serialize, Deserialize, Builder, Clone)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[builder(build_fn(error = "crate::types::error::BuilderError"))]
 pub struct UtaoTitleData {

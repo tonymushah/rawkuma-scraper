@@ -1,5 +1,5 @@
 use derive_builder::Builder;
-#[cfg(feature = "serde")]
+
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
@@ -9,8 +9,7 @@ use crate::parser::search::RawKumaSearchParser;
 
 use super::{BsxTitleData, FromHtmlParser, RawKumaResult};
 
-#[derive(Default, Clone, Builder)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Default, Clone, Builder, Serialize, Deserialize)]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[builder(build_fn(error = "crate::types::error::BuilderError"))]

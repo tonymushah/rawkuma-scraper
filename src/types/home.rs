@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use derive_builder::Builder;
-#[cfg(feature = "serde")]
+
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
@@ -11,7 +11,7 @@ use crate::parser::home::RawKumaHomeParser;
 
 use super::{BsxTitleData, FromHtmlParser, RawKumaResult, UtaoTitleData};
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[derive(Clone, Builder, Default)]

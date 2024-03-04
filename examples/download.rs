@@ -9,5 +9,7 @@ async fn main() {
         .chapter(&"rouhou-ore-no-iinazuke-ni-natta-jimiko-ie-de-wa-kawaii-shika-nai-chapter-14")
         .await
         .unwrap();
-    for _chapter_image in chapter {}
+    for _chapter_image in chapter {
+        println!("{:#?}", _chapter_image);
+    }
 }
