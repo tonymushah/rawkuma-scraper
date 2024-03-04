@@ -34,6 +34,8 @@ pub enum Error {
     ChronoParseError(#[from] chrono::ParseError),
     #[error("{0}")]
     SelectorErrorKind(String),
+    #[error(transparent)]
+    SerdeJsonError(#[from] serde_json::Error),
 }
 
 #[doc = "Error type for Rawkuma Error"]

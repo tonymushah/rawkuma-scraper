@@ -1,7 +1,7 @@
 use derive_builder::Builder;
 use reqwest::Url;
 use scraper::{ElementRef, Selector};
-#[cfg(feature = "serde")]
+
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
@@ -13,8 +13,7 @@ use super::{FromElementRef, MgenTag, RawKumaResult};
 
 use chrono::{DateTime, FixedOffset};
 
-#[derive(Builder, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Builder, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[builder(build_fn(error = "crate::types::error::BuilderError"))]

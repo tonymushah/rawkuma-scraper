@@ -1,5 +1,5 @@
 use derive_builder::Builder;
-#[cfg(feature = "serde")]
+
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
@@ -15,7 +15,7 @@ use super::ToUrlParam;
 
 #[derive(Builder, Clone)]
 #[cfg_attr(feature = "getset", derive(Getters, Setters))]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[builder(build_fn(error = "crate::types::error::BuilderError"))]
 pub struct MangaListParameter {

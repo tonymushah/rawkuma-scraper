@@ -1,7 +1,6 @@
-#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[derive(Clone)]
 pub enum Status {
@@ -22,7 +21,7 @@ impl Status {
     }
 }
 
-impl<'a> AsRef<str> for Status {
+impl AsRef<str> for Status {
     fn as_ref(&self) -> &str {
         self.as_str()
     }

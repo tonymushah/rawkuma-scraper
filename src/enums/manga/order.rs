@@ -1,4 +1,3 @@
-#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 impl Order {
@@ -34,8 +33,7 @@ impl<'a> From<&'a str> for Order {
 }
 
 #[cfg_attr(feature = "specta", derive(specta::Type))]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum Order {
     Default,
     AZ,

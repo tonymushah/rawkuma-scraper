@@ -1,5 +1,5 @@
 use derive_builder::Builder;
-#[cfg(feature = "serde")]
+
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "getset")]
@@ -11,8 +11,7 @@ use crate::types::{
     chapterlist::ChapterList, BixboxData, BsxTitleData, FromHtmlParser, RawKumaResult,
 };
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Clone, Builder, Default)]
+#[derive(Serialize, Deserialize, Clone, Builder, Default)]
 #[cfg_attr(feature = "getset", derive(Getters))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[builder(build_fn(error = "crate::types::error::BuilderError"))]
