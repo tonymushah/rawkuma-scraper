@@ -8,9 +8,9 @@ edition = "2021"
 [dependencies]
 reqwest = { version = "0.11", features = ["json"] }
 url = { version = "2" }
-scraper = "0.17.1"
+scraper = "0.19"
 tokio = { version = "1", features = ["rt", "sync", "rt-multi-thread", "macros"], optional = true}
-derive_builder = "0.12"
+derive_builder = "0.20"
 serde = { version = "1", features = ["derive"], optional = true}
 chrono = { version = "0.4", features = ["std"]}
 async-trait = "0.1"
